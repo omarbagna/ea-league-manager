@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ensureProfile } from "@/lib/ensure-profile";
@@ -8,12 +9,17 @@ import { getSiteUrl } from "@/lib/site-url";
 import {
   forgotPasswordSchema,
   onboardingSchema,
+  playerProfileSchema,
   signInSchema,
   signUpSchema,
   updatePasswordSchema,
 } from "@/lib/validations/auth";
 import { enrollPlayerInSeason } from "@/lib/enroll-player-season";
-import { canAutoEnrollInSeason, getActiveSeason } from "@/lib/season";
+import {
+  canAutoEnrollInSeason,
+  getActiveSeason,
+  getCurrentUserTeamId,
+} from "@/lib/season";
 
 export type AuthActionState = {
   error?: string;
@@ -181,6 +187,66 @@ export async function completeOnboarding(
   }
 
   redirect("/dashboard");
+}
+
+export async function updatePlayerProfile(
+  _prev: AuthActionState,
+  formData: FormData
+): Promise<AuthActionState> {
+  const parsed = playerProfileSchema.safeParse({
+    teamName: formData.get("teamName"),
+    eaId: formData.get("eaId"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0]?.message ?? "Invalid input" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .update({
+      team_name: parsed.data.teamName,
+      ea_id: parsed.data.eaId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", user.id);
+
+  if (profileError) return { error: profileError.message };
+
+  const season = await getActiveSeason();
+  if (season) {
+    const teamId = await getCurrentUserTeamId(user.id, season.id);
+    if (teamId) {
+      const crestSeed = parsed.data.teamName.slice(0, 2).toUpperCase();
+      const { error: teamError } = await supabase
+        .from("teams")
+        .update({
+          name: parsed.data.teamName,
+          crest_seed: crestSeed,
+        })
+        .eq("id", teamId)
+        .eq("profile_id", user.id);
+
+      if (teamError) {
+        if (teamError.code === "23505") {
+          return { error: "Team name already taken in this season." };
+        }
+        return { error: teamError.message };
+      }
+    }
+  }
+
+  revalidatePath("/settings");
+  revalidatePath("/dashboard");
+  revalidatePath("/fixtures");
+  revalidatePath("/standings");
+
+  return { success: "Profile updated." };
 }
 
 export async function signOut() {

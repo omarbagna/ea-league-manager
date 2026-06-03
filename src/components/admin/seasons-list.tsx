@@ -76,7 +76,7 @@ export function SeasonsList({
             key={s.id}
             className="rounded-lg border border-outline-variant bg-surface-container-low"
           >
-            <div className="flex items-center justify-between gap-2 px-4 py-3">
+            <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <button
                 type="button"
                 className="flex flex-1 items-center gap-2 text-left"
@@ -99,7 +99,7 @@ export function SeasonsList({
                   </p>
                 </div>
               </button>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
                 <Link
                   href={`/admin/standings?season=${s.id}`}
                   className="text-xs text-primary hover:underline"

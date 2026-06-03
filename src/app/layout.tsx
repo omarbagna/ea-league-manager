@@ -23,6 +23,10 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Dark Elite League",
   description: "Competitive league management for Dark Elite League",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

@@ -14,12 +14,16 @@ export function MatchFixtureCard({
   matchweek,
   showEaIds = true,
   linkToReport,
+  highlightTeamId,
 }: {
   fixture: FixtureWithTeams;
   matchweek?: MatchweekInfo;
   showEaIds?: boolean;
   linkToReport?: boolean;
+  highlightTeamId?: string;
 }) {
+  const highlightHome = highlightTeamId === fixture.home_team_id;
+  const highlightAway = highlightTeamId === fixture.away_team_id;
   const completed = fixture.status === "completed";
   const upcoming = !completed;
   const mw = matchweek ?? (fixture.matchweek as MatchweekInfo | undefined);
@@ -29,13 +33,21 @@ export function MatchFixtureCard({
     <div
       className={cn(
         "flex flex-col items-center justify-between gap-4 rounded-lg border border-outline-variant p-4 transition-colors md:flex-row",
+        (highlightHome || highlightAway) && "border-primary-fixed/30 bg-primary-fixed/5",
         upcoming
-          ? "cursor-pointer bg-surface-container neon-glow-hover"
-          : "bg-surface-container-low hover:bg-surface-container-high"
+          ? "cursor-pointer neon-glow-hover"
+          : "hover:bg-surface-container-high",
+        upcoming && !(highlightHome || highlightAway) && "bg-surface-container",
+        !upcoming && "bg-surface-container-low"
       )}
     >
       <div className="flex w-full flex-1 items-center gap-3 md:justify-end">
-        <span className="order-2 text-right font-display font-semibold md:order-1">
+        <span
+          className={cn(
+            "order-2 text-right font-display font-semibold md:order-1",
+            highlightHome && "text-primary-fixed"
+          )}
+        >
           {fixture.home_team.name}
         </span>
         {showEaIds && fixture.home_team.profile?.ea_id && (
@@ -86,7 +98,14 @@ export function MatchFixtureCard({
           size="sm"
         />
         <div className="flex flex-col">
-          <span className="font-display font-semibold">{fixture.away_team.name}</span>
+          <span
+            className={cn(
+              "font-display font-semibold",
+              highlightAway && "text-primary-fixed"
+            )}
+          >
+            {fixture.away_team.name}
+          </span>
           {showEaIds && fixture.away_team.profile?.ea_id && (
             <span className="font-data text-[10px] text-outline">
               {fixture.away_team.profile.ea_id}

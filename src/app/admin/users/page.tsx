@@ -16,7 +16,7 @@ export default async function AdminUsersPage() {
         {(profiles ?? []).map((p) => (
           <li
             key={p.id}
-            className="flex items-center justify-between rounded-lg border border-outline-variant px-4 py-3"
+            className="flex flex-col gap-3 rounded-lg border border-outline-variant px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
               <p className="font-medium">{p.email}</p>

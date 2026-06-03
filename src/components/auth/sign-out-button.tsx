@@ -5,7 +5,24 @@ import { signOut } from "@/actions/auth";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { cn } from "@/lib/utils";
 
-export function AdminSignOutButton() {
+export function AdminSignOutButton({ fullWidth = false }: { fullWidth?: boolean }) {
+  if (fullWidth) {
+    return (
+      <form action={signOut} className="w-full">
+        <SubmitButton
+          variant="outline"
+          pendingText="Signing out…"
+          className={cn(
+            "w-full border-outline-variant text-on-surface hover:border-error hover:bg-error-container/10 hover:text-error"
+          )}
+        >
+          <LogOut className="size-4" />
+          Sign out
+        </SubmitButton>
+      </form>
+    );
+  }
+
   return (
     <form action={signOut}>
       <SubmitButton
@@ -14,6 +31,7 @@ export function AdminSignOutButton() {
         pendingText="Signing out…"
         className="h-auto px-0 py-0 text-sm text-on-surface-variant hover:bg-transparent hover:text-error"
       >
+        <LogOut className="size-4" />
         Sign out
       </SubmitButton>
     </form>

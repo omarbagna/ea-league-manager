@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AppLogo } from "@/components/brand/app-logo";
 
 const initialState: AuthActionState = {};
 
@@ -15,7 +16,8 @@ export function OnboardingForm() {
 
   return (
     <main className="relative z-10 w-full max-w-[440px] rounded-xl border border-outline-variant p-6 glass-panel neon-glow-active md:p-8">
-      <header className="mb-6 flex flex-col gap-1 text-center">
+      <header className="mb-6 flex flex-col items-center gap-3 text-center">
+        <AppLogo size="md" priority />
         <h1 className="font-display text-xl font-extrabold italic tracking-tight text-primary-container uppercase drop-shadow-[0_0_8px_rgba(0,240,255,0.3)] md:text-2xl">
           Dark Elite League
         </h1>

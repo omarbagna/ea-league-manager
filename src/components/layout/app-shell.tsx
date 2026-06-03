@@ -8,17 +8,20 @@ import {
   Trophy,
   Gamepad2,
   Plus,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
 import { AppSignOutButton } from "@/components/auth/sign-out-button";
+import { AppLogo } from "@/components/brand/app-logo";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/fixtures", label: "Fixtures", icon: Calendar },
   { href: "/standings", label: "Standings", icon: Trophy },
   { href: "/matches/report", label: "Submit Score", icon: Gamepad2 },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function AppShell({
@@ -38,8 +41,8 @@ export function AppShell({
     <div className="flex h-screen min-h-0 flex-col overflow-hidden bg-background md:flex-row">
       <nav className="fixed top-0 left-0 z-20 hidden h-full w-64 flex-col border-r border-outline-variant bg-surface-container-low p-3 md:flex">
         <div className="mb-8 px-2 pt-2">
-          <h1 className="font-display text-lg font-bold italic text-primary">Dark Elite League</h1>
-          <p className="font-data mt-1 text-xs text-on-surface-variant uppercase">
+          <AppLogo href="/dashboard" size="sm" showTitle />
+          <p className="font-data mt-3 text-xs text-on-surface-variant uppercase">
             {seasonName ?? "Season"}
           </p>
         </div>
@@ -89,9 +92,7 @@ export function AppShell({
 
       <div className="flex min-h-0 flex-1 flex-col md:pl-64">
         <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-outline-variant bg-surface-container-lowest px-[var(--spacing-gutter)] shadow-[0_4px_24px_rgba(0,0,0,0.45)]">
-          <span className="font-display text-lg font-extrabold italic text-primary-container md:hidden">
-            Dark Elite League
-          </span>
+          <AppLogo href="/dashboard" size="sm" showTitle className="md:hidden" />
           <nav className="hidden gap-6 lg:flex lg:items-end lg:self-stretch">
             {navItems.slice(0, 2).map(({ href, label }) => (
               <Link

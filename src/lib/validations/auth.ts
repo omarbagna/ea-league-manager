@@ -38,3 +38,6 @@ export const onboardingSchema = z.object({
   teamName: z.string().min(2, "Team name must be at least 2 characters").max(50),
   eaId: z.string().min(2, "EA ID must be at least 2 characters").max(30),
 });
+
+/** Same rules as onboarding; used when players edit profile after signup. */
+export const playerProfileSchema = onboardingSchema;
