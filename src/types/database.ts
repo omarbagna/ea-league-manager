@@ -7,6 +7,7 @@ export type SubmissionStatus =
   | "disputed"
   | "rejected";
 export type DisputeResolution = "pending" | "approved" | "rejected" | "override";
+export type ForfeitReportStatus = "pending" | "approved" | "rejected";
 
 export interface Profile {
   id: string;
@@ -62,6 +63,22 @@ export interface Fixture {
   status: FixtureStatus;
   home_score: number | null;
   away_score: number | null;
+  forfeited_team_id: string | null;
+}
+
+export interface ForfeitReport {
+  id: string;
+  fixture_id: string;
+  reported_by: string;
+  absent_team_id: string;
+  notes: string | null;
+  screenshot_path: string;
+  status: ForfeitReportStatus;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface MatchSubmission {

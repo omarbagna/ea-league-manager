@@ -12,6 +12,12 @@ import { PendingApprovalPanel } from "@/components/matches/pending-approval-pane
 import { AwaitingApprovalPanel } from "@/components/matches/awaiting-approval-panel";
 import { DisputedMatchPanel } from "@/components/matches/disputed-match-panel";
 import { getActiveDisputeForUser } from "@/lib/queries/disputes";
+import {
+  getForfeitEligibility,
+  getMyPendingForfeitForUser,
+} from "@/lib/queries/forfeits";
+import { ReportForfeitForm } from "@/components/matches/report-forfeit-form";
+import { ForfeitAwaitingPanel } from "@/components/matches/forfeit-awaiting-panel";
 
 export default async function ReportMatchPage({
   searchParams,
@@ -38,6 +44,10 @@ export default async function ReportMatchPage({
   const pendingToApprove = await getPendingApprovalForUser(user.id);
   const myPendingSubmission = await getMyPendingSubmissionForUser(user.id);
   const activeDispute = await getActiveDisputeForUser(user.id);
+  const myPendingForfeit = await getMyPendingForfeitForUser(
+    user.id,
+    params.fixtureId
+  );
 
   const fixture = params.fixtureId
     ? await getFixtureById(params.fixtureId)
@@ -82,9 +92,27 @@ export default async function ReportMatchPage({
     activeDispute &&
     (!fixture || activeDispute.fixture.id === fixture.id);
 
-  const showApprovalPanel = !!activePendingApproval && !showDisputePanel;
+  const showForfeitAwaiting =
+    !!myPendingForfeit &&
+    (!fixture || myPendingForfeit.fixture.id === fixture.id) &&
+    !showDisputePanel;
+
+  const showApprovalPanel =
+    !!activePendingApproval && !showDisputePanel && !showForfeitAwaiting;
   const showAwaitingPanel =
-    !!activeMySubmission && !showApprovalPanel && !showDisputePanel;
+    !!activeMySubmission &&
+    !showApprovalPanel &&
+    !showDisputePanel &&
+    !showForfeitAwaiting;
+
+  const forfeitEligibility =
+    fixture && teamId
+      ? await getForfeitEligibility(fixture.id, user.id)
+      : null;
+
+  const forfeitScreenshotUrl = myPendingForfeit
+    ? await getSubmissionScreenshotUrl(myPendingForfeit.report.screenshot_path)
+    : null;
 
   const opponentScreenshotUrl = activePendingApproval
     ? await getSubmissionScreenshotUrl(
@@ -107,6 +135,16 @@ export default async function ReportMatchPage({
       ? await getSubmissionScreenshotUrl(activeDispute.dispute.counter_screenshot_path)
       : null;
 
+  const showForfeitSubmit =
+    fixture &&
+    teamId &&
+    forfeitEligibility?.eligible &&
+    !showApprovalPanel &&
+    !showAwaitingPanel &&
+    !showDisputePanel &&
+    !showForfeitAwaiting &&
+    !hasDisputedFixture;
+
   const showSubmit =
     fixture &&
     teamId &&
@@ -117,10 +155,16 @@ export default async function ReportMatchPage({
     !showApprovalPanel &&
     !showAwaitingPanel &&
     !showDisputePanel &&
+    !showForfeitAwaiting &&
     !hasDisputedFixture;
 
   const hasReportingContent =
-    showSubmit || showApprovalPanel || showAwaitingPanel || showDisputePanel;
+    showSubmit ||
+    showForfeitSubmit ||
+    showForfeitAwaiting ||
+    showApprovalPanel ||
+    showAwaitingPanel ||
+    showDisputePanel;
 
   return (
     <div className="mx-auto w-full max-w-[1280px] px-4 py-6 md:px-12">
@@ -141,8 +185,37 @@ export default async function ReportMatchPage({
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:gap-8">
+        {showForfeitSubmit && forfeitEligibility?.fixture && (
+          <ReportForfeitForm
+            fixture={forfeitEligibility.fixture}
+            absentTeamName={
+              teamId === forfeitEligibility.fixture.home_team_id
+                ? forfeitEligibility.fixture.away_team.name
+                : forfeitEligibility.fixture.home_team.name
+            }
+          />
+        )}
+
+        {showForfeitAwaiting && myPendingForfeit && (
+          <ForfeitAwaitingPanel
+            homeTeamName={myPendingForfeit.fixture.home_team.name}
+            awayTeamName={myPendingForfeit.fixture.away_team.name}
+            homeScore={myPendingForfeit.previewScore.homeScore}
+            awayScore={myPendingForfeit.previewScore.awayScore}
+            absentTeamName={myPendingForfeit.absentTeamName}
+            screenshotUrl={forfeitScreenshotUrl}
+          />
+        )}
+
         {showSubmit && teamId && (
           <ReportMatchForm fixture={fixture} userTeamId={teamId} />
+        )}
+
+        {showForfeitSubmit && showSubmit && (
+          <section className="rounded-xl border border-outline-variant/50 bg-surface-container-low p-4 text-sm text-on-surface-variant xl:col-span-2">
+            Played the match anyway? Submit a normal score in the other panel. The no-show
+            report is only if your opponent did not show after the weekend ended.
+          </section>
         )}
 
         {showAwaitingPanel && activeMySubmission && (

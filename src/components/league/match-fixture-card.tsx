@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { TeamCrest } from "@/components/league/team-crest";
 import { formatWeekendRange } from "@/lib/format-weekend";
+import { isMatchweekEnded } from "@/lib/forfeit-eligibility";
 import { cn } from "@/lib/utils";
 import type { FixtureWithTeams } from "@/types/database";
 
@@ -15,12 +16,14 @@ export function MatchFixtureCard({
   showEaIds = true,
   linkToReport,
   highlightTeamId,
+  userProfileId,
 }: {
   fixture: FixtureWithTeams;
   matchweek?: MatchweekInfo;
   showEaIds?: boolean;
   linkToReport?: boolean;
   highlightTeamId?: string;
+  userProfileId?: string;
 }) {
   const highlightHome = highlightTeamId === fixture.home_team_id;
   const highlightAway = highlightTeamId === fixture.away_team_id;
@@ -28,6 +31,13 @@ export function MatchFixtureCard({
   const upcoming = !completed;
   const mw = matchweek ?? (fixture.matchweek as MatchweekInfo | undefined);
   const weekend = formatWeekendRange(mw?.starts_at, mw?.ends_at);
+  const isParticipant =
+    !!userProfileId &&
+    (fixture.home_team.profile_id === userProfileId ||
+      fixture.away_team.profile_id === userProfileId);
+  const showNoShowLink =
+    upcoming && isParticipant && isMatchweekEnded(mw?.ends_at);
+  const isForfeit = completed && !!fixture.forfeited_team_id;
 
   const content = (
     <div
@@ -68,7 +78,7 @@ export function MatchFixtureCard({
         {completed ? (
           <>
             <span className="mb-1 font-data text-[10px] uppercase tracking-widest text-on-surface-variant">
-              FT
+              FT{isForfeit ? " · Forfeit" : ""}
             </span>
             <div className="rounded border border-outline-variant bg-surface-container-lowest px-3 py-1 neon-glow-active">
               <span className="font-data text-2xl font-bold tracking-widest text-secondary-fixed">
@@ -118,7 +128,17 @@ export function MatchFixtureCard({
 
   if (linkToReport && upcoming) {
     return (
-      <Link href={`/matches/report?fixtureId=${fixture.id}`}>{content}</Link>
+      <div className="flex flex-col gap-2">
+        <Link href={`/matches/report?fixtureId=${fixture.id}`}>{content}</Link>
+        {showNoShowLink && (
+          <Link
+            href={`/matches/report?fixtureId=${fixture.id}`}
+            className="text-center font-data text-xs uppercase tracking-widest text-error hover:underline"
+          >
+            Report opponent no-show
+          </Link>
+        )}
+      </div>
     );
   }
   return content;

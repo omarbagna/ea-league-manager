@@ -11,6 +11,7 @@ export default async function AdminOverviewPage() {
     { count: teams },
     { count: fixtures },
     { count: disputes },
+    { count: forfeits },
     { data: season },
   ] = await Promise.all([
     supabase.from("teams").select("*", { count: "exact", head: true }),
@@ -19,6 +20,10 @@ export default async function AdminOverviewPage() {
       .from("match_disputes")
       .select("*", { count: "exact", head: true })
       .eq("resolution", "pending"),
+    supabase
+      .from("forfeit_reports")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending"),
     supabase.from("seasons").select("*").eq("status", "active").maybeSingle(),
   ]);
 
@@ -30,7 +35,7 @@ export default async function AdminOverviewPage() {
       <p className="text-on-surface-variant">
         Active season: {season?.name ?? "None — activate a season to go live"}
       </p>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader>
             <CardTitle>Registered Teams</CardTitle>
@@ -48,6 +53,12 @@ export default async function AdminOverviewPage() {
             <CardTitle>Open Disputes</CardTitle>
           </CardHeader>
           <CardContent className="font-data text-3xl text-error">{disputes ?? 0}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Pending No-Shows</CardTitle>
+          </CardHeader>
+          <CardContent className="font-data text-3xl text-error">{forfeits ?? 0}</CardContent>
         </Card>
       </div>
 
@@ -74,6 +85,9 @@ export default async function AdminOverviewPage() {
         </Link>
         <Link href="/admin/disputes" className="text-primary hover:underline">
           Resolve disputes →
+        </Link>
+        <Link href="/admin/forfeits" className="text-primary hover:underline">
+          Review no-shows →
         </Link>
       </div>
     </div>

@@ -28,10 +28,12 @@ export function FixturesClient({
   grouped,
   seasonName,
   userTeamId,
+  userProfileId,
 }: {
   grouped: Group[];
   seasonName: string;
   userTeamId?: string | null;
+  userProfileId?: string;
 }) {
   const [scope, setScope] = useState<ScopeFilter>("league");
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -119,6 +121,7 @@ export function FixturesClient({
                       matchweek={matchweek}
                       linkToReport={fixture.status !== "completed"}
                       highlightTeamId={highlightTeamId}
+                      userProfileId={userProfileId}
                     />
                   ))}
                 </div>

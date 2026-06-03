@@ -10,6 +10,7 @@ import {
   Users,
   Trophy,
   Gavel,
+  UserX,
   UserCog,
   Menu,
   X,
@@ -33,6 +34,7 @@ const adminNavItems: NavItem[] = [
   { href: "/admin/fixtures", label: "Fixtures", icon: Calendar },
   { href: "/admin/standings", label: "Standings", icon: Trophy },
   { href: "/admin/disputes", label: "Disputes", icon: Gavel },
+  { href: "/admin/forfeits", label: "No-shows", icon: UserX },
   { href: "/admin/users", label: "Users", icon: UserCog },
 ];
 

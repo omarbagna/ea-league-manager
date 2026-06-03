@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { purgeSubmissionScreenshot } from "@/lib/purge-submission-screenshot";
+import { purgeForfeitScreenshot } from "@/lib/purge-forfeit-screenshot";
 import { enrollPlayerInSeason } from "@/lib/enroll-player-season";
 import { getActiveSeason } from "@/lib/season";
 import {
@@ -325,6 +326,159 @@ export async function resolveDispute(
   revalidatePath("/admin/disputes");
   revalidatePath("/dashboard");
   return { success: "Dispute resolved." };
+}
+
+async function notifyUser(
+  userId: string,
+  type: string,
+  title: string,
+  body: string,
+  payload: Record<string, unknown> = {}
+) {
+  const service = await createServiceClient();
+  await service.from("notifications").insert({
+    user_id: userId,
+    type,
+    title,
+    body,
+    payload,
+  });
+}
+
+export async function approveForfeitReport(
+  reportId: string,
+  adminNotes?: string
+): Promise<AdminActionState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "admin") return { error: "Forbidden" };
+
+  const { data: report } = await supabase
+    .from("forfeit_reports")
+    .select("*")
+    .eq("id", reportId)
+    .single();
+
+  if (!report || report.status !== "pending") {
+    return { error: "Report not found or already processed" };
+  }
+
+  await supabase
+    .from("forfeit_reports")
+    .update({
+      resolved_by: user.id,
+      admin_notes: adminNotes ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", reportId);
+
+  const service = await createServiceClient();
+  const { error: approveError } = await service.rpc("approve_forfeit_report", {
+    p_report_id: reportId,
+  });
+  if (approveError) return { error: approveError.message };
+
+  const { error: purgeError } = await purgeForfeitScreenshot(reportId);
+  if (purgeError) return { error: purgeError };
+
+  const { getFixtureById } = await import("@/lib/queries/fixtures");
+  const fixture = await getFixtureById(report.fixture_id);
+  const opponentProfile =
+    fixture &&
+    (report.reported_by === fixture.home_team.profile_id
+      ? fixture.away_team.profile_id
+      : fixture.home_team.profile_id);
+
+  await notifyUser(
+    report.reported_by,
+    "forfeit_approved",
+    "No-Show Approved",
+    "Your no-show report was approved. The match is recorded as a 3–0 forfeit win.",
+    { reportId, fixtureId: report.fixture_id }
+  );
+
+  if (opponentProfile) {
+    await notifyUser(
+      opponentProfile,
+      "forfeit_approved",
+      "Match Forfeited",
+      "An admin approved a no-show report against you. The match is recorded as 3–0 against you.",
+      { reportId, fixtureId: report.fixture_id }
+    );
+  }
+
+  revalidatePath("/admin/forfeits");
+  revalidatePath("/admin");
+  revalidatePath("/matches/report");
+  revalidatePath("/fixtures");
+  revalidatePath("/dashboard");
+  revalidatePath("/standings");
+  return { success: "Forfeit approved." };
+}
+
+export async function rejectForfeitReport(
+  reportId: string,
+  adminNotes?: string
+): Promise<AdminActionState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "admin") return { error: "Forbidden" };
+
+  const { data: report } = await supabase
+    .from("forfeit_reports")
+    .select("*")
+    .eq("id", reportId)
+    .single();
+
+  if (!report || report.status !== "pending") {
+    return { error: "Report not found or already processed" };
+  }
+
+  const { error } = await supabase
+    .from("forfeit_reports")
+    .update({
+      status: "rejected",
+      resolved_by: user.id,
+      resolved_at: new Date().toISOString(),
+      admin_notes: adminNotes ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", reportId);
+
+  if (error) return { error: error.message };
+
+  await notifyUser(
+    report.reported_by,
+    "forfeit_rejected",
+    "No-Show Report Rejected",
+    "Your no-show report was rejected. You may submit a normal score report or file again with better evidence.",
+    { reportId, fixtureId: report.fixture_id }
+  );
+
+  revalidatePath("/admin/forfeits");
+  revalidatePath("/admin");
+  revalidatePath("/matches/report");
+  revalidatePath("/fixtures");
+  revalidatePath("/dashboard");
+  return { success: "Forfeit report rejected." };
 }
 
 export async function enrollPlayerInActiveSeason(

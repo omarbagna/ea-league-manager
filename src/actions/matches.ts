@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { purgeSubmissionScreenshot } from "@/lib/purge-submission-screenshot";
 import { scoreSubmissionSchema, disputeSchema } from "@/lib/validations/matches";
+import { forfeitReportSchema } from "@/lib/validations/forfeits";
+import { getForfeitEligibility } from "@/lib/queries/forfeits";
 
 export type MatchActionState = { error?: string; success?: string };
 
@@ -22,6 +24,23 @@ async function notifyUser(
     body,
     payload,
   });
+}
+
+async function notifyAdmins(
+  type: string,
+  title: string,
+  body: string,
+  payload: Record<string, unknown> = {}
+) {
+  const supabase = await createServiceClient();
+  const { data: admins } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("role", "admin");
+
+  for (const admin of admins ?? []) {
+    await notifyUser(admin.id, type, title, body, payload);
+  }
 }
 
 export async function submitMatchScore(
@@ -73,6 +92,17 @@ export async function submitMatchScore(
           ? "This fixture has an open dispute."
           : "A submission is already pending for this fixture",
     };
+  }
+
+  const { data: pendingForfeit } = await supabase
+    .from("forfeit_reports")
+    .select("id")
+    .eq("fixture_id", parsed.data.fixtureId)
+    .eq("status", "pending")
+    .maybeSingle();
+
+  if (pendingForfeit) {
+    return { error: "A no-show report is pending admin review for this fixture." };
   }
 
   const { data: submission, error } = await supabase
@@ -255,4 +285,90 @@ export async function uploadScreenshot(
 
   if (error) return { error: error.message };
   return { path };
+}
+
+export async function submitForfeitReport(
+  _prev: MatchActionState,
+  formData: FormData
+): Promise<MatchActionState> {
+  const parsed = forfeitReportSchema.safeParse({
+    fixtureId: formData.get("fixtureId"),
+    screenshotPath: formData.get("screenshotPath"),
+    notes: formData.get("notes") || undefined,
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0]?.message ?? "Invalid report" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const eligibility = await getForfeitEligibility(parsed.data.fixtureId, user.id);
+  if (!eligibility.eligible || !eligibility.fixture) {
+    const messages: Record<string, string> = {
+      fixture_completed: "This fixture is already completed.",
+      matchweek_not_ended: "You can report a no-show after the matchweek weekend ends.",
+      not_participant: "You are not a participant in this match.",
+      pending_submission: "A score submission is already pending for this fixture.",
+      pending_forfeit: "A no-show report is already pending for this fixture.",
+      no_matchweek: "This fixture has no matchweek dates.",
+    };
+    return {
+      error: messages[eligibility.reason] ?? "Cannot submit a no-show report for this fixture.",
+    };
+  }
+
+  const fixture = eligibility.fixture;
+  const absentTeamId =
+    user.id === fixture.home_team.profile_id
+      ? fixture.away_team_id
+      : fixture.home_team_id;
+
+  const { data: report, error } = await supabase
+    .from("forfeit_reports")
+    .insert({
+      fixture_id: parsed.data.fixtureId,
+      reported_by: user.id,
+      absent_team_id: absentTeamId,
+      notes: parsed.data.notes ?? null,
+      screenshot_path: parsed.data.screenshotPath,
+      status: "pending",
+    })
+    .select("id")
+    .single();
+
+  if (error) return { error: error.message };
+
+  const opponentProfile =
+    user.id === fixture.home_team.profile_id
+      ? fixture.away_team.profile_id
+      : fixture.home_team.profile_id;
+
+  if (opponentProfile) {
+    await notifyUser(
+      opponentProfile,
+      "forfeit_filed",
+      "No-Show Report Filed",
+      "Your opponent reported that you did not show for your match. An admin will review.",
+      { reportId: report.id, fixtureId: parsed.data.fixtureId }
+    );
+  }
+
+  await notifyAdmins(
+    "forfeit_review_required",
+    "No-Show Review Required",
+    "A player filed a no-show forfeit report.",
+    { reportId: report.id, fixtureId: parsed.data.fixtureId }
+  );
+
+  revalidatePath("/matches/report");
+  revalidatePath("/fixtures");
+  revalidatePath("/dashboard");
+  revalidatePath("/admin/forfeits");
+  revalidatePath("/admin");
+  return { success: "No-show report submitted. An admin will review." };
 }

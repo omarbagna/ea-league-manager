@@ -30,6 +30,7 @@ export default async function FixturesPage() {
         grouped={grouped}
         seasonName={season.name}
         userTeamId={userTeamId}
+        userProfileId={user?.id}
       />
     </div>
   );

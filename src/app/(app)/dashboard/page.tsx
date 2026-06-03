@@ -11,6 +11,8 @@ import { TeamCrest } from "@/components/league/team-crest";
 import { SeasonProgressChart } from "@/components/league/season-progress-chart";
 import { Button } from "@/components/ui/button";
 import { formatWeekendRange } from "@/lib/format-weekend";
+import { isMatchweekEnded } from "@/lib/forfeit-eligibility";
+import { getForfeitEligibility } from "@/lib/queries/forfeits";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -64,6 +66,15 @@ export default async function DashboardPage() {
       )
     : null;
 
+  const nextMatchweekEndsAt = (
+    nextFixture?.matchweek as { ends_at?: string | null } | undefined
+  )?.ends_at;
+
+  const forfeitEligible =
+    nextFixture && user
+      ? (await getForfeitEligibility(nextFixture.id, user.id)).eligible
+      : false;
+
   return (
     <div className="mx-auto max-w-[1280px] space-y-8">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
@@ -94,9 +105,25 @@ export default async function DashboardPage() {
             <h3 className="font-display text-4xl font-extrabold italic tracking-tighter text-surface-tint drop-shadow-md">
               Matchweek {(nextFixture.matchweek as { number?: number })?.number ?? "—"}
             </h3>
-            <Link href={`/matches/report?fixtureId=${nextFixture.id}`} className="mt-4 inline-block">
-              <Button>Report Result</Button>
-            </Link>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3 md:justify-start">
+              <Link href={`/matches/report?fixtureId=${nextFixture.id}`}>
+                <Button>
+                  {forfeitEligible ? "Report Match" : "Report Result"}
+                </Button>
+              </Link>
+              {forfeitEligible && (
+                <Link href={`/matches/report?fixtureId=${nextFixture.id}`}>
+                  <Button variant="outline" className="border-error/50 text-error">
+                    Report No-Show
+                  </Button>
+                </Link>
+              )}
+            </div>
+            {nextMatchweekEndsAt && isMatchweekEnded(nextMatchweekEndsAt) && !forfeitEligible && (
+              <p className="mt-2 text-center text-xs text-on-surface-variant md:text-left">
+                Matchweek ended — use the reporting hub if you need to dispute a result.
+              </p>
+            )}
           </div>
           <div className="relative z-10 flex items-center gap-6 md:gap-10">
             <div className="flex flex-col items-center gap-2">
