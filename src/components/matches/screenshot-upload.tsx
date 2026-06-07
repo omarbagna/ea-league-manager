@@ -4,22 +4,60 @@ import { useEffect, useRef, useState } from "react";
 import { Camera } from "lucide-react";
 import { EvidenceImagePreview } from "@/components/matches/evidence-image-preview";
 import { cn } from "@/lib/utils";
-import { Spinner } from "@/components/ui/spinner";
+import { uploadMatchEvidence } from "@/lib/upload-match-evidence";
 
-const MAX_SIZE = 5 * 1024 * 1024;
+function UploadProgressOverlay({
+  progress,
+  className,
+}: {
+  progress: number | null;
+  className?: string;
+}) {
+  const indeterminate = progress === null;
+
+  return (
+    <div
+      className={cn(
+        "absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-lg bg-surface-container-lowest/90 px-6",
+        className
+      )}
+    >
+      <div className="w-full max-w-xs">
+        <div className="h-1.5 overflow-hidden rounded-full bg-outline-variant/40">
+          <div
+            className={cn(
+              "h-full rounded-full bg-primary transition-[width] duration-150",
+              indeterminate && "w-1/3 animate-pulse"
+            )}
+            style={indeterminate ? undefined : { width: `${progress}%` }}
+          />
+        </div>
+      </div>
+      <p className="text-sm text-on-surface-variant">
+        {indeterminate
+          ? "Uploading screenshot…"
+          : `Uploading screenshot… ${progress}%`}
+      </p>
+    </div>
+  );
+}
 
 export function ScreenshotUpload({
-  onFileSelect,
   disabled,
-  uploading = false,
+  onUploaded,
+  onUploadError,
+  onCleared,
 }: {
-  onFileSelect: (file: File | null) => void | Promise<void>;
   disabled?: boolean;
-  uploading?: boolean;
+  onUploaded: (path: string) => void;
+  onUploadError?: (message: string) => void;
+  onCleared?: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
   const isDisabled = disabled || uploading;
 
   useEffect(() => {
@@ -30,37 +68,62 @@ export function ScreenshotUpload({
     };
   }, [preview]);
 
-  const handleFile = async (file: File | null) => {
-    setError(null);
+  const clearPreview = () => {
     if (preview?.startsWith("blob:")) {
       URL.revokeObjectURL(preview);
     }
+    setPreview(null);
+    setProgress(null);
+    onCleared?.();
+  };
+
+  const handleFile = async (file: File | null) => {
+    setError(null);
     if (!file) {
-      setPreview(null);
-      await onFileSelect(null);
+      clearPreview();
       return;
     }
-    if (!file.type.startsWith("image/")) {
-      setError("Please upload a JPEG or PNG image.");
+
+    const objectUrl = URL.createObjectURL(file);
+    setPreview(objectUrl);
+    setUploading(true);
+    setProgress(0);
+
+    const result = await uploadMatchEvidence(file, setProgress);
+    setUploading(false);
+
+    if (result.error) {
+      setError(result.error);
+      onUploadError?.(result.error);
+      clearPreview();
+      if (inputRef.current) inputRef.current.value = "";
       return;
     }
-    if (file.size > MAX_SIZE) {
-      setError("File must be under 5MB.");
+
+    if (!result.path) {
+      setError("Upload failed.");
+      onUploadError?.("Upload failed.");
+      clearPreview();
+      if (inputRef.current) inputRef.current.value = "";
       return;
     }
-    setPreview(URL.createObjectURL(file));
-    await onFileSelect(file);
+
+    setProgress(100);
+    onUploaded(result.path);
   };
 
   return (
     <div className="space-y-2">
       {preview ? (
         <div className="space-y-2">
-          <EvidenceImagePreview
-            src={preview}
-            alt="Upload preview"
-            label="Your screenshot"
-          />
+          <div className="relative">
+            <EvidenceImagePreview
+              src={preview}
+              alt="Upload preview"
+              label="Your screenshot"
+            />
+            {uploading && <UploadProgressOverlay progress={progress} />}
+          </div>
           <button
             type="button"
             disabled={isDisabled}
@@ -85,12 +148,7 @@ export function ScreenshotUpload({
           )}
           aria-busy={uploading}
         >
-          {uploading && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-lg bg-surface-container-lowest/90">
-              <Spinner size="md" />
-              <p className="text-sm text-on-surface-variant">Uploading…</p>
-            </div>
-          )}
+          {uploading && <UploadProgressOverlay progress={progress} />}
           <input
             ref={inputRef}
             type="file"

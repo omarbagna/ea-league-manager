@@ -11,6 +11,7 @@ export default async function AdminOverviewPage() {
     { count: teams },
     { count: fixtures },
     { count: disputes },
+    { count: pendingReports },
     { count: forfeits },
     { data: season },
   ] = await Promise.all([
@@ -20,6 +21,10 @@ export default async function AdminOverviewPage() {
       .from("match_disputes")
       .select("*", { count: "exact", head: true })
       .eq("resolution", "pending"),
+    supabase
+      .from("match_submissions")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending_approval"),
     supabase
       .from("forfeit_reports")
       .select("*", { count: "exact", head: true })
@@ -56,6 +61,14 @@ export default async function AdminOverviewPage() {
         </Card>
         <Card>
           <CardHeader>
+            <CardTitle>Pending Reports</CardTitle>
+          </CardHeader>
+          <CardContent className="font-data text-3xl text-error">
+            {pendingReports ?? 0}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
             <CardTitle>Pending No-Shows</CardTitle>
           </CardHeader>
           <CardContent className="font-data text-3xl text-error">{forfeits ?? 0}</CardContent>
@@ -82,6 +95,9 @@ export default async function AdminOverviewPage() {
         </Link>
         <Link href="/admin/standings" className="text-primary hover:underline">
           View league table →
+        </Link>
+        <Link href="/admin/reports" className="text-primary hover:underline">
+          Review pending reports →
         </Link>
         <Link href="/admin/disputes" className="text-primary hover:underline">
           Resolve disputes →

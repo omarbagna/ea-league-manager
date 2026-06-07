@@ -328,6 +328,77 @@ export async function resolveDispute(
   return { success: "Dispute resolved." };
 }
 
+export async function adminApproveSubmission(
+  submissionId: string
+): Promise<AdminActionState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "admin") return { error: "Forbidden" };
+
+  const { data: sub } = await supabase
+    .from("match_submissions")
+    .select("*")
+    .eq("id", submissionId)
+    .single();
+
+  if (!sub || sub.status !== "pending_approval") {
+    return { error: "Submission not found or already processed" };
+  }
+
+  const { getFixtureById } = await import("@/lib/queries/fixtures");
+  const fixture = await getFixtureById(sub.fixture_id);
+  if (!fixture) return { error: "Fixture not found" };
+
+  const opponentProfile =
+    sub.submitted_by === fixture.home_team.profile_id
+      ? fixture.away_team.profile_id
+      : fixture.home_team.profile_id;
+
+  const service = await createServiceClient();
+  const { error: approveError } = await service.rpc("approve_match_submission", {
+    p_submission_id: submissionId,
+  });
+  if (approveError) return { error: approveError.message };
+
+  const { error: purgeError } = await purgeSubmissionScreenshot(submissionId);
+  if (purgeError) return { error: purgeError };
+
+  await notifyUser(
+    sub.submitted_by,
+    "result_approved",
+    "Result Approved",
+    "An admin reviewed and approved your match result.",
+    { submissionId, fixtureId: sub.fixture_id }
+  );
+
+  if (opponentProfile) {
+    await notifyUser(
+      opponentProfile,
+      "result_approved",
+      "Match Result Finalized",
+      "An admin approved the submitted match result for your fixture.",
+      { submissionId, fixtureId: sub.fixture_id }
+    );
+  }
+
+  revalidatePath("/admin/reports");
+  revalidatePath("/admin");
+  revalidatePath("/matches/report");
+  revalidatePath("/fixtures");
+  revalidatePath("/standings");
+  revalidatePath("/dashboard");
+  return { success: "Report approved." };
+}
+
 async function notifyUser(
   userId: string,
   type: string,

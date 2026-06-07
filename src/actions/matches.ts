@@ -264,29 +264,6 @@ export async function disputeSubmission(
   return { success: "Dispute submitted for admin review." };
 }
 
-export async function uploadScreenshot(
-  formData: FormData
-): Promise<{ path?: string; error?: string }> {
-  const file = formData.get("file") as File | null;
-  if (!file) return { error: "No file provided" };
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated" };
-
-  const ext = file.name.split(".").pop() ?? "jpg";
-  const path = `${user.id}/${Date.now()}.${ext}`;
-
-  const { error } = await supabase.storage
-    .from("match-evidence")
-    .upload(path, file, { upsert: false });
-
-  if (error) return { error: error.message };
-  return { path };
-}
-
 export async function submitForfeitReport(
   _prev: MatchActionState,
   formData: FormData

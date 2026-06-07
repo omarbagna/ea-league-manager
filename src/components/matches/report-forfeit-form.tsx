@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { AlertTriangle, Send } from "lucide-react";
-import { submitForfeitReport, uploadScreenshot } from "@/actions/matches";
+import { submitForfeitReport } from "@/actions/matches";
 import { ScreenshotUpload } from "@/components/matches/screenshot-upload";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -18,26 +18,7 @@ export function ReportForfeitForm({
   const [notes, setNotes] = useState("");
   const [screenshotPath, setScreenshotPath] = useState<string | null>(null);
   const [message, setMessage] = useState<{ error?: string; success?: string }>({});
-  const [uploading, setUploading] = useState(false);
   const [pending, startTransition] = useTransition();
-
-  const handleFile = async (file: File | null) => {
-    if (!file) {
-      setScreenshotPath(null);
-      return;
-    }
-    setUploading(true);
-    const fd = new FormData();
-    fd.set("file", file);
-    const result = await uploadScreenshot(fd);
-    setUploading(false);
-    if (result.error) {
-      setMessage({ error: result.error });
-      setScreenshotPath(null);
-    } else {
-      setScreenshotPath(result.path ?? null);
-    }
-  };
 
   const handleSubmit = () => {
     if (!screenshotPath) {
@@ -57,15 +38,13 @@ export function ReportForfeitForm({
     });
   };
 
-  const isBusy = pending || uploading;
-
   return (
     <section
       className={cn(
         "relative flex flex-col overflow-hidden rounded-xl border border-outline-variant bg-[#0f1115] p-4 shadow-lg",
         pending && "pointer-events-none opacity-60"
       )}
-      aria-busy={isBusy}
+      aria-busy={pending}
     >
       <div className="absolute top-0 left-0 h-0.5 w-full bg-gradient-to-r from-transparent via-error to-transparent opacity-50" />
       <div className="mb-4 flex items-start gap-2">
@@ -102,7 +81,15 @@ export function ReportForfeitForm({
         />
       </label>
 
-      <ScreenshotUpload onFileSelect={handleFile} disabled={pending} uploading={uploading} />
+      <ScreenshotUpload
+        disabled={pending}
+        onUploaded={(path) => {
+          setScreenshotPath(path);
+          setMessage({});
+        }}
+        onUploadError={(msg) => setMessage({ error: msg })}
+        onCleared={() => setScreenshotPath(null)}
+      />
 
       {message.error && <p className="mt-2 text-sm text-error">{message.error}</p>}
       {message.success && (
@@ -114,7 +101,7 @@ export function ReportForfeitForm({
           variant="secondary"
           className="w-full"
           loading={pending}
-          disabled={pending || uploading || !screenshotPath}
+          disabled={pending || !screenshotPath}
           onClick={handleSubmit}
         >
           <Send className="size-4" />

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Gavel, CheckCircle, Hourglass } from "lucide-react";
-import { approveSubmission, disputeSubmission, uploadScreenshot } from "@/actions/matches";
+import { approveSubmission, disputeSubmission } from "@/actions/matches";
 import { EvidenceImagePreview } from "@/components/matches/evidence-image-preview";
 import { ScreenshotUpload } from "@/components/matches/screenshot-upload";
 import { MatchScoreStatus } from "@/components/matches/match-score-status";
@@ -40,32 +40,12 @@ export function PendingApprovalPanel({
   const [counterScreenshotPath, setCounterScreenshotPath] = useState<string | null>(
     null
   );
-  const [uploading, setUploading] = useState(false);
   const [pendingAction, setPendingAction] = useState<"approve" | "dispute" | null>(
     null
   );
   const [message, setMessage] = useState<{ error?: string; success?: string }>({});
   const [, startTransition] = useTransition();
   const pending = pendingAction !== null;
-  const isBusy = pending || uploading;
-
-  const handleDisputeScreenshot = async (file: File | null) => {
-    if (!file) {
-      setCounterScreenshotPath(null);
-      return;
-    }
-    setUploading(true);
-    const fd = new FormData();
-    fd.set("file", file);
-    const result = await uploadScreenshot(fd);
-    setUploading(false);
-    if (result.error) {
-      setMessage({ error: result.error });
-      setCounterScreenshotPath(null);
-    } else {
-      setCounterScreenshotPath(result.path ?? null);
-    }
-  };
 
   const handleApprove = () => {
     setMessage({});
@@ -109,9 +89,9 @@ export function PendingApprovalPanel({
     <section
       className={cn(
         "relative flex flex-col overflow-hidden rounded-xl border border-outline-variant bg-[#0f1115] p-4 shadow-lg",
-        isBusy && "pointer-events-none opacity-60"
+        pending && "pointer-events-none opacity-60"
       )}
-      aria-busy={isBusy}
+      aria-busy={pending}
     >
       <div className="absolute top-0 left-0 h-0.5 w-full bg-gradient-to-r from-transparent via-error to-transparent opacity-50" />
       <div className="mb-4">
@@ -164,9 +144,13 @@ export function PendingApprovalPanel({
             isHome={!isHome}
           />
           <ScreenshotUpload
-            onFileSelect={handleDisputeScreenshot}
             disabled={pending}
-            uploading={uploading}
+            onUploaded={(path) => {
+              setCounterScreenshotPath(path);
+              setMessage({});
+            }}
+            onUploadError={(msg) => setMessage({ error: msg })}
+            onCleared={() => setCounterScreenshotPath(null)}
           />
           <div>
             <Label htmlFor="disputeReason" className="text-xs uppercase">
@@ -194,7 +178,7 @@ export function PendingApprovalPanel({
               variant="destructive"
               size="sm"
               loading={pendingAction === "dispute"}
-              disabled={isBusy || !counterScreenshotPath}
+              disabled={pending || !counterScreenshotPath}
               onClick={handleDispute}
             >
               {pendingAction === "dispute" ? "Submitting…" : "Submit dispute"}
@@ -210,7 +194,7 @@ export function PendingApprovalPanel({
       )}
 
       {!showDisputeForm && (
-        <div className="mt-6 grid grid-cols-2 gap-4 border-t border-outline-variant/30 pt-4">
+        <div className="mt-6 grid grid-cols-1 gap-4 border-t border-outline-variant/30 pt-4 sm:grid-cols-2">
           <Button
             variant="destructive"
             size="lg"

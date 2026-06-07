@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Send } from "lucide-react";
-import { submitMatchScore, uploadScreenshot } from "@/actions/matches";
+import { submitMatchScore } from "@/actions/matches";
 import { ScoreStepper } from "@/components/matches/score-stepper";
 import { ScreenshotUpload } from "@/components/matches/screenshot-upload";
 import { Button } from "@/components/ui/button";
@@ -21,26 +21,7 @@ export function ReportMatchForm({
   const [awayScore, setAwayScore] = useState(0);
   const [screenshotPath, setScreenshotPath] = useState<string | null>(null);
   const [message, setMessage] = useState<{ error?: string; success?: string }>({});
-  const [uploading, setUploading] = useState(false);
   const [pending, startTransition] = useTransition();
-
-  const handleFile = async (file: File | null) => {
-    if (!file) {
-      setScreenshotPath(null);
-      return;
-    }
-    setUploading(true);
-    const fd = new FormData();
-    fd.set("file", file);
-    const result = await uploadScreenshot(fd);
-    setUploading(false);
-    if (result.error) {
-      setMessage({ error: result.error });
-      setScreenshotPath(null);
-    } else {
-      setScreenshotPath(result.path ?? null);
-    }
-  };
 
   const handleSubmit = () => {
     if (!screenshotPath) {
@@ -61,15 +42,13 @@ export function ReportMatchForm({
     });
   };
 
-  const isBusy = pending || uploading;
-
   return (
     <section
       className={cn(
         "relative flex flex-col overflow-hidden rounded-xl border border-outline-variant bg-[#0f1115] p-4 shadow-lg",
         pending && "pointer-events-none opacity-60"
       )}
-      aria-busy={isBusy}
+      aria-busy={pending}
     >
       <div className="absolute top-0 left-0 h-0.5 w-full bg-gradient-to-r from-transparent via-primary-container to-transparent opacity-50" />
       <div className="mb-4 flex justify-between">
@@ -106,9 +85,13 @@ export function ReportMatchForm({
           eaId={fixture.away_team.profile?.ea_id}
         />
         <ScreenshotUpload
-          onFileSelect={handleFile}
           disabled={pending}
-          uploading={uploading}
+          onUploaded={(path) => {
+            setScreenshotPath(path);
+            setMessage({});
+          }}
+          onUploadError={(msg) => setMessage({ error: msg })}
+          onCleared={() => setScreenshotPath(null)}
         />
       </div>
 
@@ -124,7 +107,7 @@ export function ReportMatchForm({
           variant="secondary"
           className="w-full"
           loading={pending}
-          disabled={pending || uploading || !screenshotPath}
+          disabled={pending || !screenshotPath}
           onClick={handleSubmit}
         >
           <Send className="size-4" />

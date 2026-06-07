@@ -24,7 +24,8 @@ export function AwaitingApprovalPanel({
           <h3 className="font-display text-lg font-semibold">Awaiting Opponent Approval</h3>
         </div>
         <p className="font-data text-xs text-outline">
-          Your result is locked in until your opponent approves or disputes it
+          Your result is locked in until your opponent approves or disputes it. If they do
+          not respond, a league admin can review and approve the report.
         </p>
       </div>
 
