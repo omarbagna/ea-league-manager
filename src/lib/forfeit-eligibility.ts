@@ -22,6 +22,16 @@ export function forfeitScoresForReporter(
   return { homeScore: 0, awayScore: 0 };
 }
 
+export function forfeitScoresForAbsentTeam(
+  homeTeamId: string,
+  awayTeamId: string,
+  absentTeamId: string
+): { homeScore: number; awayScore: number } {
+  const winnerTeamId =
+    absentTeamId === homeTeamId ? awayTeamId : homeTeamId;
+  return forfeitScoresForReporter(homeTeamId, awayTeamId, winnerTeamId);
+}
+
 export type ForfeitEligibilityReason =
   | "eligible"
   | "fixture_completed"

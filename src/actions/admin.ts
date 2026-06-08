@@ -552,6 +552,114 @@ export async function rejectForfeitReport(
   return { success: "Forfeit report rejected." };
 }
 
+const adminForfeitSchema = z.object({
+  fixtureId: z.string().uuid(),
+  absentTeamId: z.string().uuid(),
+  adminNotes: z.string().max(500).optional(),
+});
+
+export async function adminMarkFixtureForfeit(
+  fixtureId: string,
+  absentTeamId: string,
+  adminNotes?: string
+): Promise<AdminActionState> {
+  const parsed = adminForfeitSchema.safeParse({
+    fixtureId,
+    absentTeamId,
+    adminNotes: adminNotes || undefined,
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0]?.message ?? "Invalid forfeit data" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "admin") return { error: "Forbidden" };
+
+  const { data: pendingSubmissions } = await supabase
+    .from("match_submissions")
+    .select("id")
+    .eq("fixture_id", parsed.data.fixtureId)
+    .in("status", ["pending_approval", "disputed"]);
+
+  const { data: pendingReports } = await supabase
+    .from("forfeit_reports")
+    .select("id")
+    .eq("fixture_id", parsed.data.fixtureId)
+    .eq("status", "pending");
+
+  const service = await createServiceClient();
+  const { error: forfeitError } = await service.rpc("admin_forfeit_fixture", {
+    p_fixture_id: parsed.data.fixtureId,
+    p_absent_team_id: parsed.data.absentTeamId,
+    p_admin_id: user.id,
+    p_admin_notes: parsed.data.adminNotes ?? null,
+  });
+  if (forfeitError) return { error: forfeitError.message };
+
+  for (const sub of pendingSubmissions ?? []) {
+    const { error: purgeError } = await purgeSubmissionScreenshot(sub.id);
+    if (purgeError) return { error: purgeError };
+  }
+
+  for (const report of pendingReports ?? []) {
+    const { error: purgeError } = await purgeForfeitScreenshot(report.id);
+    if (purgeError) return { error: purgeError };
+  }
+
+  const { getFixtureById } = await import("@/lib/queries/fixtures");
+  const fixture = await getFixtureById(parsed.data.fixtureId);
+  if (fixture) {
+    const winnerProfileId =
+      parsed.data.absentTeamId === fixture.home_team_id
+        ? fixture.away_team.profile_id
+        : fixture.home_team.profile_id;
+    const loserProfileId =
+      parsed.data.absentTeamId === fixture.home_team_id
+        ? fixture.home_team.profile_id
+        : fixture.away_team.profile_id;
+
+    if (winnerProfileId) {
+      await notifyUser(
+        winnerProfileId,
+        "forfeit_admin",
+        "No-Show Forfeit Recorded",
+        "An admin recorded a no-show forfeit. The match is finalized 3–0 in your favor.",
+        { fixtureId: parsed.data.fixtureId }
+      );
+    }
+    if (loserProfileId) {
+      await notifyUser(
+        loserProfileId,
+        "forfeit_admin",
+        "Match Forfeited",
+        "An admin recorded you as no-show. The match is finalized 3–0 against you.",
+        { fixtureId: parsed.data.fixtureId }
+      );
+    }
+  }
+
+  revalidatePath("/admin/fixtures");
+  revalidatePath("/admin/forfeits");
+  revalidatePath("/admin/reports");
+  revalidatePath("/admin/disputes");
+  revalidatePath("/admin");
+  revalidatePath("/matches/report");
+  revalidatePath("/fixtures");
+  revalidatePath("/dashboard");
+  revalidatePath("/standings");
+  return { success: "Forfeit recorded." };
+}
+
 export async function enrollPlayerInActiveSeason(
   profileId: string
 ): Promise<AdminActionState> {

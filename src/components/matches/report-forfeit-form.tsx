@@ -21,14 +21,10 @@ export function ReportForfeitForm({
   const [pending, startTransition] = useTransition();
 
   const handleSubmit = () => {
-    if (!screenshotPath) {
-      setMessage({ error: "Screenshot is required." });
-      return;
-    }
     startTransition(async () => {
       const fd = new FormData();
       fd.set("fixtureId", fixture.id);
-      fd.set("screenshotPath", screenshotPath);
+      if (screenshotPath) fd.set("screenshotPath", screenshotPath);
       if (notes.trim()) fd.set("notes", notes.trim());
       const result = await submitForfeitReport({}, fd);
       setMessage(result);
@@ -61,9 +57,10 @@ export function ReportForfeitForm({
       </div>
 
       <p className="mb-4 text-sm text-on-surface-variant">
-        Submit evidence that you were ready to play and your opponent did not appear. An admin
-        will review. If approved, the match is recorded as a{" "}
-        <strong className="text-secondary-fixed">3–0 forfeit win</strong> for you.
+        Tell an admin that you were ready to play and your opponent did not appear. If
+        approved, the match is recorded as a{" "}
+        <strong className="text-secondary-fixed">3–0 forfeit win</strong> for you. A
+        screenshot is optional; add notes if you have no image.
       </p>
 
       <label className="mb-4 block">
@@ -83,6 +80,7 @@ export function ReportForfeitForm({
 
       <ScreenshotUpload
         disabled={pending}
+        optional
         onUploaded={(path) => {
           setScreenshotPath(path);
           setMessage({});
@@ -101,7 +99,7 @@ export function ReportForfeitForm({
           variant="secondary"
           className="w-full"
           loading={pending}
-          disabled={pending || !screenshotPath}
+          disabled={pending}
           onClick={handleSubmit}
         >
           <Send className="size-4" />

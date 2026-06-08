@@ -90,7 +90,7 @@ export function ForfeitResolver({
         src={screenshotUrl}
         alt="No-show evidence"
         label={`${reporterTeamName} — evidence`}
-        emptyMessage="Screenshot not available"
+        emptyMessage="No screenshot provided."
       />
 
       <label className="block">

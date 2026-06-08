@@ -72,7 +72,7 @@ export interface ForfeitReport {
   reported_by: string;
   absent_team_id: string;
   notes: string | null;
-  screenshot_path: string;
+  screenshot_path: string | null;
   status: ForfeitReportStatus;
   resolved_by: string | null;
   resolved_at: string | null;

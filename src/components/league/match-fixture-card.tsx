@@ -4,6 +4,7 @@ import { formatWeekendRange } from "@/lib/format-weekend";
 import { isMatchweekEnded } from "@/lib/forfeit-eligibility";
 import { cn } from "@/lib/utils";
 import type { FixtureWithTeams } from "@/types/database";
+import type { ReactNode } from "react";
 
 type MatchweekInfo = {
   starts_at?: string | null;
@@ -17,6 +18,7 @@ export function MatchFixtureCard({
   linkToReport,
   highlightTeamId,
   userProfileId,
+  footer,
 }: {
   fixture: FixtureWithTeams;
   matchweek?: MatchweekInfo;
@@ -24,11 +26,13 @@ export function MatchFixtureCard({
   linkToReport?: boolean;
   highlightTeamId?: string;
   userProfileId?: string;
+  footer?: ReactNode;
 }) {
   const highlightHome = highlightTeamId === fixture.home_team_id;
   const highlightAway = highlightTeamId === fixture.away_team_id;
   const completed = fixture.status === "completed";
   const upcoming = !completed;
+  const interactive = linkToReport && upcoming;
   const mw = matchweek ?? (fixture.matchweek as MatchweekInfo | undefined);
   const weekend = formatWeekendRange(mw?.starts_at, mw?.ends_at);
   const isParticipant =
@@ -44,9 +48,8 @@ export function MatchFixtureCard({
       className={cn(
         "flex flex-col items-center justify-between gap-4 rounded-lg border border-outline-variant p-4 transition-colors md:flex-row",
         (highlightHome || highlightAway) && "border-primary-fixed/30 bg-primary-fixed/5",
-        upcoming
-          ? "cursor-pointer neon-glow-hover"
-          : "hover:bg-surface-container-high",
+        interactive && "cursor-pointer neon-glow-hover",
+        !interactive && !completed && "hover:bg-surface-container-high",
         upcoming && !(highlightHome || highlightAway) && "bg-surface-container",
         !upcoming && "bg-surface-container-low"
       )}
@@ -126,11 +129,19 @@ export function MatchFixtureCard({
     </div>
   );
 
-  if (linkToReport && upcoming) {
+  const cardBody =
+    interactive ? (
+      <Link href={`/matches/report?fixtureId=${fixture.id}`}>{content}</Link>
+    ) : (
+      content
+    );
+
+  if (footer || (interactive && showNoShowLink)) {
     return (
       <div className="flex flex-col gap-2">
-        <Link href={`/matches/report?fixtureId=${fixture.id}`}>{content}</Link>
-        {showNoShowLink && (
+        {cardBody}
+        {footer}
+        {interactive && showNoShowLink && (
           <Link
             href={`/matches/report?fixtureId=${fixture.id}`}
             className="text-center font-data text-xs uppercase tracking-widest text-error hover:underline"
@@ -141,5 +152,6 @@ export function MatchFixtureCard({
       </div>
     );
   }
+
   return content;
 }

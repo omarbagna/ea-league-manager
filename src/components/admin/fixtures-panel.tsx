@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { AdminFixtureForfeitDialog } from "@/components/admin/admin-fixture-forfeit-dialog";
+import { MatchFixtureCard } from "@/components/league/match-fixture-card";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatWeekendRange } from "@/lib/format-weekend";
 import { cn } from "@/lib/utils";
 import type { AdminActionState } from "@/actions/admin";
@@ -22,6 +25,14 @@ type Group = {
   matchweek: Matchweek;
   fixtures: FixtureWithTeams[];
 };
+
+type StatusFilter = "all" | "upcoming" | "completed";
+
+function fixtureMatchesStatus(fixture: FixtureWithTeams, status: StatusFilter): boolean {
+  if (status === "upcoming") return fixture.status !== "completed";
+  if (status === "completed") return fixture.status === "completed";
+  return true;
+}
 
 export function AdminFixturesPanel({
   seasonId,
@@ -48,11 +59,23 @@ export function AdminFixturesPanel({
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const [scheduleStart, setScheduleStart] = useState(seasonStartsAt ?? "");
+  const [status, setStatus] = useState<StatusFilter>("all");
   const hasSchedule = matchweeks.length > 0;
   const isGenerating = pendingAction === "generate";
 
   const previewCount =
     teams.length >= 2 ? teams.length * (teams.length - 1) : 0;
+
+  const filtered = useMemo(() => {
+    return grouped
+      .map((g) => ({
+        ...g,
+        fixtures: g.fixtures.filter((f) => fixtureMatchesStatus(f, status)),
+      }))
+      .filter((g) => g.fixtures.length > 0);
+  }, [grouped, status]);
+
+  const currentMw = filtered[0]?.matchweek;
 
   const handleGenerate = () => {
     setPendingAction("generate");
@@ -63,16 +86,7 @@ export function AdminFixturesPanel({
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-primary">
-          Fixtures — {seasonName}
-        </h1>
-        <p className="mt-1 font-data text-xs uppercase text-on-surface-variant">
-          {seasonStatus}
-        </p>
-      </div>
-
+    <div className="mx-auto max-w-[1024px] space-y-8">
       {teams.length < 2 && (
         <p className="text-sm text-on-surface-variant">
           At least two teams must register before generating fixtures.
@@ -120,39 +134,71 @@ export function AdminFixturesPanel({
         </div>
       )}
 
-      {hasSchedule &&
-        matchweeks.map((mw) => {
-          const weekend = formatWeekendRange(mw.starts_at, mw.ends_at);
-          const weekFixtures =
-            grouped.find((g) => g.matchweek.id === mw.id)?.fixtures ?? [];
-
-          return (
-            <div
-              key={mw.id}
-              className="rounded-xl border border-outline-variant p-4"
-            >
-              <div className="mb-4">
-                <h2 className="font-display text-lg font-semibold">
-                  Matchweek {mw.number}
-                </h2>
-                {weekend && (
-                  <p className="font-data text-xs text-on-surface-variant">
-                    {weekend}
-                  </p>
-                )}
-              </div>
-
-              <ul className="space-y-1 text-sm">
-                {weekFixtures.map((f) => (
-                  <li key={f.id} className="font-data text-on-surface-variant">
-                    {f.home_team?.name ?? "?"} vs {f.away_team?.name ?? "?"} —{" "}
-                    {f.status}
-                  </li>
-                ))}
-              </ul>
+      {hasSchedule && (
+        <>
+          <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <h2 className="font-display text-3xl font-extrabold uppercase italic tracking-tight text-secondary-fixed">
+                {currentMw ? `Matchweek ${currentMw.number}` : "Fixtures"}
+              </h2>
+              <p className="font-data mt-2 text-sm text-primary">{seasonName}</p>
+              <p className="font-data mt-1 text-xs uppercase text-on-surface-variant">
+                {seasonStatus}
+              </p>
             </div>
-          );
-        })}
+            <Tabs value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
+              <TabsList>
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                <TabsTrigger value="completed">Completed</TabsTrigger>
+              </TabsList>
+              <TabsContent value={status} className="hidden" />
+            </Tabs>
+          </div>
+
+          <div className="flex flex-col gap-8">
+            {filtered.length === 0 ? (
+              <p className="text-center text-on-surface-variant">
+                No fixtures match this filter.
+              </p>
+            ) : (
+              filtered.map(({ matchweek, fixtures }) => {
+                const weekend = formatWeekendRange(
+                  matchweek.starts_at,
+                  matchweek.ends_at
+                );
+                return (
+                  <div key={matchweek.id}>
+                    <h3 className="font-display text-xl font-bold text-primary">
+                      Matchweek {matchweek.number}
+                    </h3>
+                    {weekend && (
+                      <p className="mb-4 font-data text-xs text-on-surface-variant">
+                        {weekend}
+                      </p>
+                    )}
+                    <div className="flex flex-col gap-4">
+                      {fixtures.map((fixture) => (
+                        <MatchFixtureCard
+                          key={fixture.id}
+                          fixture={fixture}
+                          matchweek={matchweek}
+                          linkToReport={false}
+                          footer={
+                            fixture.status !== "completed" ? (
+                              <AdminFixtureForfeitDialog fixture={fixture} />
+                            ) : undefined
+                          }
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </>
+      )}
 
       <Link href="/admin/seasons" className="text-sm text-primary hover:underline">
         ← Back to seasons

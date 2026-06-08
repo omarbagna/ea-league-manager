@@ -44,11 +44,13 @@ function UploadProgressOverlay({
 
 export function ScreenshotUpload({
   disabled,
+  optional = false,
   onUploaded,
   onUploadError,
   onCleared,
 }: {
   disabled?: boolean;
+  optional?: boolean;
   onUploaded: (path: string) => void;
   onUploadError?: (message: string) => void;
   onCleared?: () => void;
@@ -159,7 +161,9 @@ export function ScreenshotUpload({
           />
           <Camera className="mb-2 size-8 text-outline-variant group-hover:text-primary-container" />
           <p className="text-sm text-on-surface-variant group-hover:text-on-surface">
-            Upload Match Result Screenshot
+            {optional
+              ? "Upload evidence screenshot (optional)"
+              : "Upload Match Result Screenshot"}
           </p>
           <p className="font-data mt-1 text-[10px] text-outline">JPEG, PNG up to 5MB</p>
         </div>

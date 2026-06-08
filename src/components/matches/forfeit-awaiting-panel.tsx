@@ -42,7 +42,7 @@ export function ForfeitAwaitingPanel({
         src={screenshotUrl}
         alt="No-show evidence"
         label="Your evidence"
-        emptyMessage="Screenshot no longer available."
+        emptyMessage="No screenshot provided."
         className="mt-4"
       />
 

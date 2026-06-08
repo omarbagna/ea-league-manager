@@ -270,7 +270,7 @@ export async function submitForfeitReport(
 ): Promise<MatchActionState> {
   const parsed = forfeitReportSchema.safeParse({
     fixtureId: formData.get("fixtureId"),
-    screenshotPath: formData.get("screenshotPath"),
+    screenshotPath: formData.get("screenshotPath") || undefined,
     notes: formData.get("notes") || undefined,
   });
 
@@ -312,7 +312,7 @@ export async function submitForfeitReport(
       reported_by: user.id,
       absent_team_id: absentTeamId,
       notes: parsed.data.notes ?? null,
-      screenshot_path: parsed.data.screenshotPath,
+      screenshot_path: parsed.data.screenshotPath ?? null,
       status: "pending",
     })
     .select("id")

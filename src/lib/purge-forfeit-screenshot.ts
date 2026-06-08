@@ -19,15 +19,15 @@ export async function purgeForfeitScreenshot(
       .from(BUCKET)
       .remove([report.screenshot_path]);
     if (error) return { error: error.message };
-  }
 
-  await service
-    .from("forfeit_reports")
-    .update({
-      screenshot_path: "purged",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", reportId);
+    await service
+      .from("forfeit_reports")
+      .update({
+        screenshot_path: "purged",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", reportId);
+  }
 
   return {};
 }
