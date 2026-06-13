@@ -25,8 +25,8 @@ import { ReportForfeitForm } from "@/components/matches/report-forfeit-form";
 import { ForfeitAwaitingPanel } from "@/components/matches/forfeit-awaiting-panel";
 import {
   FixtureReportPicker,
-  fixtureToReportOption,
 } from "@/components/matches/fixture-report-picker";
+import { fixtureToReportOption } from "@/lib/fixture-report-options";
 
 async function getFixtureStatusHints(
   fixtureIds: string[],

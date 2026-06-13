@@ -10,41 +10,13 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { formatWeekendRange } from "@/lib/format-weekend";
-import type { FixtureWithTeams } from "@/types/database";
+import {
+  formatFixtureReportLabel,
+  resolveFixturePickerValue,
+  type FixtureReportOption,
+} from "@/lib/fixture-report-options";
 
-export type FixtureReportOption = {
-  id: string;
-  homeTeamName: string;
-  awayTeamName: string;
-  homeEaId: string | null;
-  awayEaId: string | null;
-  statusHint?: string;
-};
-
-function formatEaId(eaId: string | null | undefined): string {
-  return eaId?.trim() || "—";
-}
-
-export function fixtureToReportOption(
-  fixture: FixtureWithTeams,
-  statusHint?: string
-): FixtureReportOption {
-  return {
-    id: fixture.id,
-    homeTeamName: fixture.home_team.name,
-    awayTeamName: fixture.away_team.name,
-    homeEaId: fixture.home_team.profile?.ea_id ?? null,
-    awayEaId: fixture.away_team.profile?.ea_id ?? null,
-    statusHint,
-  };
-}
-
-export function formatFixtureReportLabel(option: FixtureReportOption): string {
-  const home = `${option.homeTeamName} (${formatEaId(option.homeEaId)})`;
-  const away = `${option.awayTeamName} (${formatEaId(option.awayEaId)})`;
-  const base = `${home} vs ${away}`;
-  return option.statusHint ? `${base} — ${option.statusHint}` : base;
-}
+export type { FixtureReportOption };
 
 export function FixtureReportPicker({
   fixtures,
@@ -81,6 +53,8 @@ export function FixtureReportPicker({
     );
   }
 
+  const selectedValue = resolveFixturePickerValue(fixtures, selectedFixtureId);
+
   return (
     <section className="mb-6 rounded-xl border border-outline-variant/50 bg-surface-container-low p-4">
       <div className="max-w-xl">
@@ -89,11 +63,11 @@ export function FixtureReportPicker({
           {weekend ? ` · ${weekend}` : ""}
         </Label>
         <Select
-          value={selectedFixtureId ?? fixtures[0]?.id}
+          {...(selectedValue ? { value: selectedValue } : {})}
           onValueChange={(id) => router.push(`/matches/report?fixtureId=${id}`)}
         >
           <SelectTrigger id="fixture-report-select" className="mt-2">
-            <SelectValue placeholder="Select a fixture" />
+            <SelectValue placeholder="Select a fixture to report" />
           </SelectTrigger>
           <SelectContent>
             {fixtures.map((fixture) => (
