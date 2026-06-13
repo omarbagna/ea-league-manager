@@ -1,6 +1,11 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveSeason, getCurrentUserTeamId } from "@/lib/season";
-import { getFixtureById } from "@/lib/queries/fixtures";
+import {
+  getFixtureById,
+  getReportableFixturesForActiveMatchweek,
+} from "@/lib/queries/fixtures";
 import {
   getFixturePendingSubmissions,
   getMyPendingSubmissionForUser,
@@ -18,6 +23,44 @@ import {
 } from "@/lib/queries/forfeits";
 import { ReportForfeitForm } from "@/components/matches/report-forfeit-form";
 import { ForfeitAwaitingPanel } from "@/components/matches/forfeit-awaiting-panel";
+import {
+  FixtureReportPicker,
+  fixtureToReportOption,
+} from "@/components/matches/fixture-report-picker";
+
+async function getFixtureStatusHints(
+  fixtureIds: string[],
+  userId: string
+): Promise<Map<string, string>> {
+  if (!fixtureIds.length) return new Map();
+
+  const supabase = await createClient();
+  const { data: submissions } = await supabase
+    .from("match_submissions")
+    .select("fixture_id, submitted_by, status")
+    .in("fixture_id", fixtureIds)
+    .in("status", ["pending_approval", "disputed"]);
+
+  const hints = new Map<string, string>();
+
+  for (const sub of submissions ?? []) {
+    if (sub.status === "disputed") {
+      hints.set(sub.fixture_id, "Under dispute");
+    } else if (sub.submitted_by === userId) {
+      hints.set(sub.fixture_id, "Awaiting opponent");
+    } else {
+      hints.set(sub.fixture_id, "Pending your approval");
+    }
+  }
+
+  for (const id of fixtureIds) {
+    if (!hints.has(id)) {
+      hints.set(id, "Ready to report");
+    }
+  }
+
+  return hints;
+}
 
 export default async function ReportMatchPage({
   searchParams,
@@ -44,6 +87,26 @@ export default async function ReportMatchPage({
   const pendingToApprove = await getPendingApprovalForUser(user.id);
   const myPendingSubmission = await getMyPendingSubmissionForUser(user.id);
   const activeDispute = await getActiveDisputeForUser(user.id);
+  const myPendingForfeitGlobal = await getMyPendingForfeitForUser(user.id);
+
+  const { matchweek: activeMatchweek, fixtures: activeWeekFixtures } = teamId
+    ? await getReportableFixturesForActiveMatchweek(season.id, teamId)
+    : { matchweek: null, fixtures: [] };
+
+  const hasGlobalPendingWork =
+    !!pendingToApprove ||
+    !!myPendingSubmission ||
+    !!activeDispute ||
+    !!myPendingForfeitGlobal;
+
+  if (
+    !params.fixtureId &&
+    activeWeekFixtures.length === 1 &&
+    !hasGlobalPendingWork
+  ) {
+    redirect(`/matches/report?fixtureId=${activeWeekFixtures[0].id}`);
+  }
+
   const myPendingForfeit = await getMyPendingForfeitForUser(
     user.id,
     params.fixtureId
@@ -166,6 +229,17 @@ export default async function ReportMatchPage({
     showAwaitingPanel ||
     showDisputePanel;
 
+  const statusHints = activeWeekFixtures.length
+    ? await getFixtureStatusHints(
+        activeWeekFixtures.map((f) => f.id),
+        user.id
+      )
+    : new Map<string, string>();
+
+  const pickerFixtures = activeWeekFixtures.map((f) =>
+    fixtureToReportOption(f, statusHints.get(f.id))
+  );
+
   return (
     <div className="mx-auto w-full max-w-[1280px] px-4 py-6 md:px-12">
       <div className="mb-6 border-b border-outline-variant/50 pb-4">
@@ -183,6 +257,14 @@ export default async function ReportMatchPage({
           immediate league ban.
         </p>
       </div>
+
+      {activeMatchweek && pickerFixtures.length > 0 && (
+        <FixtureReportPicker
+          fixtures={pickerFixtures}
+          selectedFixtureId={params.fixtureId}
+          matchweek={activeMatchweek}
+        />
+      )}
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:gap-8">
         {showForfeitSubmit && forfeitEligibility?.fixture && (
@@ -253,11 +335,16 @@ export default async function ReportMatchPage({
         {!hasReportingContent && (
           <section className="rounded-xl border border-outline-variant bg-[#0f1115] p-8 text-center">
             <p className="text-on-surface-variant">
-              Select an upcoming fixture from{" "}
-              <a href="/fixtures" className="text-primary hover:underline">
+              {activeMatchweek && pickerFixtures.length > 0
+                ? "Choose a matchweek fixture above to report a score, or wait for an opponent submission."
+                : "No fixtures in the current matchweek to report."}
+            </p>
+            <p className="mt-3 text-sm text-on-surface-variant">
+              Report an older fixture from{" "}
+              <Link href="/fixtures" className="text-primary hover:underline">
                 Fixtures
-              </a>{" "}
-              to report a score, or wait for an opponent submission.
+              </Link>
+              .
             </p>
           </section>
         )}

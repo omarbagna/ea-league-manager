@@ -3,7 +3,7 @@ import { Calendar, TrendingUp, BarChart3 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveSeason, getCurrentUserTeamId } from "@/lib/season";
 import { getStandings, getSeasonProgress } from "@/lib/standings";
-import { getNextFixture } from "@/lib/queries/fixtures";
+import { getNextFixture, getActiveMatchweekFixture } from "@/lib/queries/fixtures";
 import { getRecentForm, getTeamStats } from "@/lib/queries/stats";
 import { StandingsTableCard } from "@/components/league/standings-table";
 import { FormBadge } from "@/components/league/form-badge";
@@ -37,7 +37,12 @@ export default async function DashboardPage() {
 
   const teamId = await getCurrentUserTeamId(user.id, season.id);
   const standings = await getStandings(season.id);
-  const nextFixture = teamId ? await getNextFixture(season.id, teamId) : null;
+  const activeFixture = teamId
+    ? await getActiveMatchweekFixture(season.id, teamId)
+    : null;
+  const nextFixture =
+    activeFixture ??
+    (teamId ? await getNextFixture(season.id, teamId) : null);
   const form = teamId ? await getRecentForm(season.id, teamId) : [];
   const stats = teamId
     ? await getTeamStats(season.id, teamId)
@@ -110,6 +115,9 @@ export default async function DashboardPage() {
                 <Button>
                   {forfeitEligible ? "Report Match" : "Report Result"}
                 </Button>
+              </Link>
+              <Link href="/matches/report">
+                <Button variant="outline">Matchweek fixtures</Button>
               </Link>
               {forfeitEligible && (
                 <Link href={`/matches/report?fixtureId=${nextFixture.id}`}>

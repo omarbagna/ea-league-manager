@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getActiveMatchweek } from "@/lib/matchweek";
 import type { Fixture, FixtureWithTeams, Team } from "@/types/database";
 
 async function enrichFixtures(
@@ -155,6 +156,88 @@ export async function getNextFixture(
   }
 
   return null;
+}
+
+export async function getUserFixturesInMatchweek(
+  seasonId: string,
+  teamId: string,
+  matchweekId: string
+): Promise<FixtureWithTeams[]> {
+  const supabase = await createClient();
+
+  const { data: matchweek } = await supabase
+    .from("matchweeks")
+    .select("id, number, starts_at, ends_at")
+    .eq("id", matchweekId)
+    .eq("season_id", seasonId)
+    .maybeSingle();
+
+  if (!matchweek) return [];
+
+  const matchweekMap = new Map([
+    [
+      matchweek.id,
+      {
+        number: matchweek.number,
+        starts_at: matchweek.starts_at,
+        ends_at: matchweek.ends_at,
+      },
+    ],
+  ]);
+
+  const { data: fixtures } = await supabase
+    .from("fixtures")
+    .select("*")
+    .eq("matchweek_id", matchweekId)
+    .neq("status", "completed")
+    .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`);
+
+  const enriched = await enrichFixtures(
+    (fixtures ?? []) as Fixture[],
+    matchweekMap
+  );
+
+  return sortFixturesByTeamName(enriched);
+}
+
+export async function getReportableFixturesForActiveMatchweek(
+  seasonId: string,
+  teamId: string
+): Promise<{
+  matchweek: { id: string; number: number; starts_at: string | null; ends_at: string | null } | null;
+  fixtures: FixtureWithTeams[];
+}> {
+  const activeMatchweek = await getActiveMatchweek(seasonId, teamId);
+  if (!activeMatchweek) {
+    return { matchweek: null, fixtures: [] };
+  }
+
+  const fixtures = await getUserFixturesInMatchweek(
+    seasonId,
+    teamId,
+    activeMatchweek.id
+  );
+
+  return {
+    matchweek: {
+      id: activeMatchweek.id,
+      number: activeMatchweek.number,
+      starts_at: activeMatchweek.starts_at,
+      ends_at: activeMatchweek.ends_at,
+    },
+    fixtures,
+  };
+}
+
+export async function getActiveMatchweekFixture(
+  seasonId: string,
+  teamId: string
+): Promise<FixtureWithTeams | null> {
+  const { fixtures } = await getReportableFixturesForActiveMatchweek(
+    seasonId,
+    teamId
+  );
+  return fixtures[0] ?? null;
 }
 
 export async function getFixtureById(

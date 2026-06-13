@@ -11,10 +11,57 @@ type MatchweekInfo = {
   ends_at?: string | null;
 };
 
+function formatEaId(eaId: string | null | undefined): string {
+  return eaId?.trim() || "—";
+}
+
+function TeamBlock({
+  name,
+  eaId,
+  crestSeed,
+  crestUrl,
+  highlighted,
+  align = "start",
+}: {
+  name: string;
+  eaId: string | null | undefined;
+  crestSeed: string | null;
+  crestUrl: string | null;
+  highlighted?: boolean;
+  align?: "start" | "end";
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3",
+        align === "end" && "flex-row-reverse md:flex-row"
+      )}
+    >
+      <TeamCrest
+        name={name}
+        seed={crestSeed}
+        crestUrl={crestUrl}
+        className="shrink-0"
+        size="sm"
+      />
+      <div className={cn("flex flex-col", align === "end" && "items-end md:items-start")}>
+        <span
+          className={cn(
+            "font-display font-semibold",
+            highlighted && "text-primary-fixed"
+          )}
+        >
+          {name}
+        </span>
+        <span className="font-data text-[10px] text-outline">{formatEaId(eaId)}</span>
+      </div>
+    </div>
+  );
+}
+
 export function MatchFixtureCard({
   fixture,
   matchweek,
-  showEaIds = true,
   linkToReport,
   highlightTeamId,
   userProfileId,
@@ -22,7 +69,6 @@ export function MatchFixtureCard({
 }: {
   fixture: FixtureWithTeams;
   matchweek?: MatchweekInfo;
-  showEaIds?: boolean;
   linkToReport?: boolean;
   highlightTeamId?: string;
   userProfileId?: string;
@@ -54,26 +100,14 @@ export function MatchFixtureCard({
         !upcoming && "bg-surface-container-low"
       )}
     >
-      <div className="flex w-full flex-1 items-center gap-3 md:justify-end">
-        <span
-          className={cn(
-            "order-2 text-right font-display font-semibold md:order-1",
-            highlightHome && "text-primary-fixed"
-          )}
-        >
-          {fixture.home_team.name}
-        </span>
-        {showEaIds && fixture.home_team.profile?.ea_id && (
-          <span className="order-3 hidden font-data text-[10px] text-outline md:block">
-            {fixture.home_team.profile.ea_id}
-          </span>
-        )}
-        <TeamCrest
+      <div className="flex w-full flex-1 md:justify-end">
+        <TeamBlock
           name={fixture.home_team.name}
-          seed={fixture.home_team.crest_seed}
+          eaId={fixture.home_team.profile?.ea_id}
+          crestSeed={fixture.home_team.crest_seed}
           crestUrl={fixture.home_team.crest_url}
-          className="order-1 shrink-0 md:order-2"
-          size="sm"
+          highlighted={highlightHome}
+          align="end"
         />
       </div>
 
@@ -103,28 +137,14 @@ export function MatchFixtureCard({
         )}
       </div>
 
-      <div className="flex w-full flex-1 items-center gap-3">
-        <TeamCrest
+      <div className="flex w-full flex-1">
+        <TeamBlock
           name={fixture.away_team.name}
-          seed={fixture.away_team.crest_seed}
+          eaId={fixture.away_team.profile?.ea_id}
+          crestSeed={fixture.away_team.crest_seed}
           crestUrl={fixture.away_team.crest_url}
-          size="sm"
+          highlighted={highlightAway}
         />
-        <div className="flex flex-col">
-          <span
-            className={cn(
-              "font-display font-semibold",
-              highlightAway && "text-primary-fixed"
-            )}
-          >
-            {fixture.away_team.name}
-          </span>
-          {showEaIds && fixture.away_team.profile?.ea_id && (
-            <span className="font-data text-[10px] text-outline">
-              {fixture.away_team.profile.ea_id}
-            </span>
-          )}
-        </div>
       </div>
     </div>
   );
