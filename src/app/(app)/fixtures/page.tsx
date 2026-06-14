@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveSeason, getCurrentUserTeamId } from "@/lib/season";
 import { getFixturesForSeason } from "@/lib/queries/fixtures";
+import { getActiveMatchweek } from "@/lib/matchweek";
 import { FixturesClient } from "@/components/league/fixtures-client";
 
 export default async function FixturesPage() {
@@ -22,7 +23,10 @@ export default async function FixturesPage() {
   const userTeamId =
     user != null ? await getCurrentUserTeamId(user.id, season.id) : null;
 
-  const grouped = await getFixturesForSeason(season.id, "all");
+  const [grouped, activeMatchweek] = await Promise.all([
+    getFixturesForSeason(season.id, "all"),
+    getActiveMatchweek(season.id, userTeamId),
+  ]);
 
   return (
     <div className="mx-auto max-w-[1024px]">
@@ -31,6 +35,7 @@ export default async function FixturesPage() {
         seasonName={season.name}
         userTeamId={userTeamId}
         userProfileId={user?.id}
+        defaultExpandedMatchweekId={activeMatchweek?.id}
       />
     </div>
   );

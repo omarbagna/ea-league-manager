@@ -1,16 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
-import { todayUtcDateString } from "@/lib/forfeit-eligibility";
+import { isMatchweekActive } from "@/lib/forfeit-eligibility";
 import type { Matchweek } from "@/types/database";
 
-/** Active = today (UTC) falls within [starts_at, ends_at] inclusive. */
-export function isMatchweekActive(
-  startsAt: string | null | undefined,
-  endsAt: string | null | undefined
-): boolean {
-  if (!startsAt || !endsAt) return false;
-  const today = todayUtcDateString();
-  return today >= startsAt && today <= endsAt;
-}
+export { isMatchweekActive } from "@/lib/forfeit-eligibility";
 
 export async function getActiveMatchweek(
   seasonId: string,

@@ -8,6 +8,16 @@ export function isMatchweekEnded(endsAt: string | null | undefined): boolean {
   return todayUtcDateString() > endsAt;
 }
 
+/** Active = today (UTC) falls within [starts_at, ends_at] inclusive. */
+export function isMatchweekActive(
+  startsAt: string | null | undefined,
+  endsAt: string | null | undefined
+): boolean {
+  if (!startsAt || !endsAt) return false;
+  const today = todayUtcDateString();
+  return today >= startsAt && today <= endsAt;
+}
+
 export function forfeitScoresForReporter(
   homeTeamId: string,
   awayTeamId: string,

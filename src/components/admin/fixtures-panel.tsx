@@ -4,11 +4,14 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { AdminFixtureForfeitDialog } from "@/components/admin/admin-fixture-forfeit-dialog";
 import { MatchFixtureCard } from "@/components/league/match-fixture-card";
+import {
+  MatchweekFixturesGroup,
+  useMatchweekExpansion,
+} from "@/components/league/matchweek-fixtures-group";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatWeekendRange } from "@/lib/format-weekend";
 import { cn } from "@/lib/utils";
 import type { AdminActionState } from "@/actions/admin";
 import type { FixtureWithTeams } from "@/types/database";
@@ -74,6 +77,8 @@ export function AdminFixturesPanel({
       }))
       .filter((g) => g.fixtures.length > 0);
   }, [grouped, status]);
+
+  const { expandedIds, toggle } = useMatchweekExpansion(filtered);
 
   const currentMw = filtered[0]?.matchweek;
 
@@ -156,45 +161,35 @@ export function AdminFixturesPanel({
             </Tabs>
           </div>
 
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-4">
             {filtered.length === 0 ? (
               <p className="text-center text-on-surface-variant">
                 No fixtures match this filter.
               </p>
             ) : (
-              filtered.map(({ matchweek, fixtures }) => {
-                const weekend = formatWeekendRange(
-                  matchweek.starts_at,
-                  matchweek.ends_at
-                );
-                return (
-                  <div key={matchweek.id}>
-                    <h3 className="font-display text-xl font-bold text-primary">
-                      Matchweek {matchweek.number}
-                    </h3>
-                    {weekend && (
-                      <p className="mb-4 font-data text-xs text-on-surface-variant">
-                        {weekend}
-                      </p>
-                    )}
-                    <div className="flex flex-col gap-4">
-                      {fixtures.map((fixture) => (
-                        <MatchFixtureCard
-                          key={fixture.id}
-                          fixture={fixture}
-                          matchweek={matchweek}
-                          linkToReport={false}
-                          footer={
-                            fixture.status !== "completed" ? (
-                              <AdminFixtureForfeitDialog fixture={fixture} />
-                            ) : undefined
-                          }
-                        />
-                      ))}
-                    </div>
-                  </div>
-                );
-              })
+              filtered.map(({ matchweek, fixtures }) => (
+                <MatchweekFixturesGroup
+                  key={matchweek.id}
+                  matchweek={matchweek}
+                  fixtureCount={fixtures.length}
+                  expanded={expandedIds.has(matchweek.id)}
+                  onToggle={() => toggle(matchweek.id)}
+                >
+                  {fixtures.map((fixture) => (
+                    <MatchFixtureCard
+                      key={fixture.id}
+                      fixture={fixture}
+                      matchweek={matchweek}
+                      linkToReport={false}
+                      footer={
+                        fixture.status !== "completed" ? (
+                          <AdminFixtureForfeitDialog fixture={fixture} />
+                        ) : undefined
+                      }
+                    />
+                  ))}
+                </MatchweekFixturesGroup>
+              ))
             )}
           </div>
         </>
