@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { enrollPlayerInActiveSeasonForm } from "@/actions/admin";
+import { DisqualifyTeamDialog } from "@/components/admin/disqualify-team-dialog";
 import { SubmitButton } from "@/components/ui/submit-button";
 
 export default async function AdminTeamsPage({
@@ -19,10 +20,19 @@ export default async function AdminTeamsPage({
   const { data: teams } = season
     ? await supabase
         .from("teams")
-        .select("id, name, crest_seed, profile_id, created_at")
+        .select("id, name, crest_seed, profile_id, created_at, disqualified_at")
         .eq("season_id", season.id)
         .order("name")
     : { data: [] };
+
+  const { count: matchweekCount } = season
+    ? await supabase
+        .from("matchweeks")
+        .select("*", { count: "exact", head: true })
+        .eq("season_id", season.id)
+    : { count: 0 };
+
+  const hasSchedule = (matchweekCount ?? 0) > 0;
 
   const enrolledProfileIds = new Set(
     (teams ?? []).map((t) => t.profile_id).filter((id): id is string => !!id)
@@ -218,22 +228,38 @@ export default async function AdminTeamsPage({
               <ul className="space-y-2">
                 {(teams ?? []).map((t) => {
                   const profile = t.profile_id ? profileMap.get(t.profile_id) : null;
+                  const isDisqualified = Boolean(t.disqualified_at);
                   return (
                     <li
                       key={t.id}
-                      className="flex flex-col gap-1 rounded-lg border border-outline-variant px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex flex-col gap-2 rounded-lg border border-outline-variant px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div>
                         <span className="font-semibold text-on-surface">{t.name}</span>
+                        {isDisqualified && (
+                          <span className="ml-2 rounded bg-error-container/30 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-error">
+                            Disqualified
+                          </span>
+                        )}
                         {profile?.ea_id && (
                           <span className="ml-2 font-data text-xs text-primary">
                             EA: {profile.ea_id}
                           </span>
                         )}
                       </div>
-                      <span className="text-sm text-on-surface-variant">
-                        {profile?.email ?? "No manager linked"}
-                      </span>
+                      <div className="flex flex-col items-start gap-2 sm:items-end">
+                        <span className="text-sm text-on-surface-variant">
+                          {profile?.email ?? "No manager linked"}
+                        </span>
+                        {!isDisqualified && (
+                          <DisqualifyTeamDialog
+                            teamId={t.id}
+                            teamName={t.name}
+                            seasonName={season.name}
+                            hasSchedule={hasSchedule}
+                          />
+                        )}
+                      </div>
                     </li>
                   );
                 })}

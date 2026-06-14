@@ -44,6 +44,7 @@ export interface Team {
   crest_url: string | null;
   crest_seed: string | null;
   profile_id: string | null;
+  disqualified_at: string | null;
 }
 
 export interface Matchweek {

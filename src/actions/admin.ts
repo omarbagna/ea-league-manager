@@ -151,7 +151,8 @@ export async function generateSeasonSchedule(
   const { data: teams } = await supabase
     .from("teams")
     .select("id")
-    .eq("season_id", seasonId);
+    .eq("season_id", seasonId)
+    .is("disqualified_at", null);
 
   if (!teams || teams.length < 2) {
     return { error: "Need at least 2 teams" };
@@ -658,6 +659,156 @@ export async function adminMarkFixtureForfeit(
   revalidatePath("/dashboard");
   revalidatePath("/standings");
   return { success: "Forfeit recorded." };
+}
+
+const disqualifyTeamSchema = z.object({
+  teamId: z.string().uuid(),
+  adminNotes: z.string().max(500).optional(),
+});
+
+export async function disqualifyPlayerFromSeason(
+  teamId: string,
+  adminNotes?: string
+): Promise<AdminActionState> {
+  const parsed = disqualifyTeamSchema.safeParse({
+    teamId,
+    adminNotes: adminNotes || undefined,
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0]?.message ?? "Invalid disqualification data" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "admin") return { error: "Forbidden" };
+
+  const { data: team } = await supabase
+    .from("teams")
+    .select("id, name, profile_id, disqualified_at, season_id")
+    .eq("id", parsed.data.teamId)
+    .single();
+
+  if (!team) return { error: "Team not found." };
+  if (team.disqualified_at) return { error: "Team is already disqualified." };
+
+  const service = await createServiceClient();
+  const { data: prepareResult, error: prepareError } = await service.rpc(
+    "disqualify_team_prepare",
+    {
+      p_team_id: parsed.data.teamId,
+      p_admin_id: user.id,
+      p_admin_notes: parsed.data.adminNotes ?? null,
+    }
+  );
+
+  if (prepareError) return { error: prepareError.message };
+  if (!prepareResult || typeof prepareResult !== "object") {
+    return { error: "Disqualification failed." };
+  }
+
+  const prepare = prepareResult as {
+    season_id: string;
+    cutoff_matchweek_number: number;
+    disqualified_team_id: string;
+    disqualified_team_name: string;
+    active_team_ids: string[];
+    forfeit_count: number;
+  };
+
+  const { regenerateFixturesAfterDisqualification } = await import(
+    "@/lib/scheduling/regenerate-after-disqualification"
+  );
+
+  let fixturesCreated = 0;
+  let matchweeksCreated = 0;
+  try {
+    const regen = await regenerateFixturesAfterDisqualification(service, prepare);
+    fixturesCreated = regen.fixturesCreated;
+    matchweeksCreated = regen.matchweeksCreated;
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Failed to regenerate fixtures.",
+    };
+  }
+
+  await service.rpc("recalculate_standings", { p_season_id: prepare.season_id });
+
+  if (team.profile_id) {
+    await notifyUser(
+      team.profile_id,
+      "season_disqualified",
+      "Removed From Season",
+      "Your team has been disqualified from the season. Contact an admin if you believe this was a mistake.",
+      { teamId: team.id, seasonId: prepare.season_id }
+    );
+  }
+
+  const { data: cutoffMatchweeks } = await service
+    .from("matchweeks")
+    .select("id")
+    .eq("season_id", prepare.season_id)
+    .gte("number", prepare.cutoff_matchweek_number);
+
+  const cutoffMatchweekIds = (cutoffMatchweeks ?? []).map((mw) => mw.id);
+
+  if (cutoffMatchweekIds.length > 0) {
+    const { data: forfeitFixtures } = await service
+      .from("fixtures")
+      .select("id, home_team_id, away_team_id")
+      .in("matchweek_id", cutoffMatchweekIds)
+      .eq("forfeited_team_id", parsed.data.teamId)
+      .eq("status", "completed");
+
+    const winnerTeamIds = (forfeitFixtures ?? []).map((fixture) =>
+      fixture.home_team_id === parsed.data.teamId
+        ? fixture.away_team_id
+        : fixture.home_team_id
+    );
+
+    if (winnerTeamIds.length > 0) {
+      const { data: winnerTeams } = await service
+        .from("teams")
+        .select("profile_id")
+        .in("id", winnerTeamIds)
+        .not("profile_id", "is", null);
+
+      const notifiedProfiles = new Set<string>();
+      for (const winnerTeam of winnerTeams ?? []) {
+        if (!winnerTeam.profile_id || notifiedProfiles.has(winnerTeam.profile_id)) {
+          continue;
+        }
+        notifiedProfiles.add(winnerTeam.profile_id);
+        await notifyUser(
+          winnerTeam.profile_id,
+          "season_disqualified_forfeit",
+          "Walkover Win Recorded",
+          `${prepare.disqualified_team_name} was disqualified. Your match is recorded as a 3–0 forfeit win.`,
+          { teamId: parsed.data.teamId, seasonId: prepare.season_id }
+        );
+      }
+    }
+  }
+
+  revalidatePath("/admin/teams");
+  revalidatePath("/admin/fixtures");
+  revalidatePath("/admin/standings");
+  revalidatePath("/fixtures");
+  revalidatePath("/standings");
+  revalidatePath("/dashboard");
+  revalidatePath("/matches/report");
+
+  return {
+    success: `${prepare.disqualified_team_name} disqualified from matchweek ${prepare.cutoff_matchweek_number}. ${prepare.forfeit_count} forfeit win${prepare.forfeit_count === 1 ? "" : "s"} recorded. ${fixturesCreated} fixture${fixturesCreated === 1 ? "" : "s"} regenerated${matchweeksCreated > 0 ? ` across ${matchweeksCreated} new matchweek${matchweeksCreated === 1 ? "" : "s"}` : ""}.`,
+  };
 }
 
 export async function enrollPlayerInActiveSeason(

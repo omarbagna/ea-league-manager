@@ -54,7 +54,14 @@ export function StandingsTable({
                 {i + 1}
               </TableCell>
               <TableCell className={cn("font-semibold", highlighted && "text-primary-fixed")}>
-                {row.team?.name ?? "—"}
+                <span className="inline-flex items-center gap-2">
+                  {row.team?.name ?? "—"}
+                  {row.team?.disqualified_at && (
+                    <span className="rounded bg-error-container/30 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-error">
+                      DQ
+                    </span>
+                  )}
+                </span>
               </TableCell>
               <TableCell className="text-center font-data text-on-surface-variant">
                 {row.played}

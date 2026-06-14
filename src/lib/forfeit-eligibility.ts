@@ -49,7 +49,8 @@ export type ForfeitEligibilityReason =
   | "not_participant"
   | "pending_submission"
   | "pending_forfeit"
-  | "no_matchweek";
+  | "no_matchweek"
+  | "team_disqualified";
 
 export type ForfeitEligibility = {
   eligible: boolean;

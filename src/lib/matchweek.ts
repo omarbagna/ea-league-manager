@@ -10,6 +10,16 @@ export async function getActiveMatchweek(
 ): Promise<Matchweek | null> {
   const supabase = await createClient();
 
+  if (teamId) {
+    const { data: team } = await supabase
+      .from("teams")
+      .select("disqualified_at")
+      .eq("id", teamId)
+      .maybeSingle();
+
+    if (team?.disqualified_at) return null;
+  }
+
   const { data: matchweeks } = await supabase
     .from("matchweeks")
     .select("*")

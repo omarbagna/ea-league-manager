@@ -42,6 +42,26 @@ export async function getForfeitEligibility(
 
   const endsAt = (fixture.matchweek as { ends_at?: string | null })?.ends_at;
 
+  const userTeamId =
+    fixture.home_team.profile_id === userId
+      ? fixture.home_team_id
+      : fixture.away_team.profile_id === userId
+        ? fixture.away_team_id
+        : null;
+
+  if (userTeamId) {
+    const supabaseForTeam = await createClient();
+    const { data: userTeam } = await supabaseForTeam
+      .from("teams")
+      .select("disqualified_at")
+      .eq("id", userTeamId)
+      .maybeSingle();
+
+    if (userTeam?.disqualified_at) {
+      return { eligible: false, reason: "team_disqualified", fixture };
+    }
+  }
+
   const result = evaluateForfeitEligibility({
     fixtureStatus: fixture.status,
     matchweekEndsAt: endsAt,

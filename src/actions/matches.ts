@@ -78,6 +78,18 @@ export async function submitMatchScore(
     return { error: "You are not a participant in this match" };
   }
 
+  const userTeamId =
+    user.id === homeProfile ? fixture.home_team_id : fixture.away_team_id;
+  const { data: userTeam } = await supabase
+    .from("teams")
+    .select("disqualified_at")
+    .eq("id", userTeamId)
+    .maybeSingle();
+
+  if (userTeam?.disqualified_at) {
+    return { error: "Your team has been disqualified from this season." };
+  }
+
   const { data: existing } = await supabase
     .from("match_submissions")
     .select("id, status")
