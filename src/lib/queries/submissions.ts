@@ -123,3 +123,71 @@ export async function getMyPendingSubmissionForUser(userId: string) {
 
   return null;
 }
+
+const REVERT_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+export type RevertableSubmission = {
+  submissionId: string;
+  fixtureId: string;
+  approvedAt: string;
+  expiresAt: string;
+  homeScore: number;
+  awayScore: number;
+};
+
+export async function getRevertableSubmissionsByFixtureIds(
+  fixtureIds: string[]
+): Promise<Map<string, RevertableSubmission>> {
+  const result = new Map<string, RevertableSubmission>();
+  if (fixtureIds.length === 0) return result;
+
+  const supabase = await createClient();
+  const cutoff = new Date(Date.now() - REVERT_WINDOW_MS).toISOString();
+
+  const { data: subs } = await supabase
+    .from("match_submissions")
+    .select("id, fixture_id, home_score, away_score, approved_at")
+    .in("fixture_id", fixtureIds)
+    .eq("status", "approved")
+    .not("approved_at", "is", null)
+    .gte("approved_at", cutoff);
+
+  if (!subs?.length) return result;
+
+  const { data: fixtures } = await supabase
+    .from("fixtures")
+    .select("id, status, home_score, away_score, forfeited_team_id")
+    .in("id", fixtureIds);
+
+  const fixtureById = new Map((fixtures ?? []).map((f) => [f.id, f]));
+
+  for (const sub of subs) {
+    const fixture = fixtureById.get(sub.fixture_id);
+    if (!fixture) continue;
+    if (fixture.status !== "completed") continue;
+    if (fixture.forfeited_team_id) continue;
+    if (
+      fixture.home_score !== sub.home_score ||
+      fixture.away_score !== sub.away_score
+    ) {
+      continue;
+    }
+    if (!sub.approved_at) continue;
+
+    const approvedAt = sub.approved_at;
+    const expiresAt = new Date(
+      new Date(approvedAt).getTime() + REVERT_WINDOW_MS
+    ).toISOString();
+
+    result.set(sub.fixture_id, {
+      submissionId: sub.id,
+      fixtureId: sub.fixture_id,
+      approvedAt,
+      expiresAt,
+      homeScore: sub.home_score,
+      awayScore: sub.away_score,
+    });
+  }
+
+  return result;
+}

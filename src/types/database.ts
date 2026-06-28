@@ -90,6 +90,7 @@ export interface MatchSubmission {
   away_score: number;
   screenshot_path: string;
   status: SubmissionStatus;
+  approved_at: string | null;
   created_at: string;
 }
 

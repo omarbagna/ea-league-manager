@@ -3,6 +3,7 @@ import { generateSeasonSchedule } from "@/actions/admin";
 import { AdminFixturesPanel } from "@/components/admin/fixtures-panel";
 import { AdminFixturesSeasonSelect } from "@/components/admin/fixtures-season-select";
 import { getFixturesForSeason } from "@/lib/queries/fixtures";
+import { getRevertableSubmissionsByFixtureIds } from "@/lib/queries/submissions";
 
 export default async function AdminFixturesPage({
   searchParams,
@@ -43,6 +44,10 @@ export default async function AdminFixturesPage({
 
   const grouped = await getFixturesForSeason(selectedSeason.id, "all");
 
+  const fixtureIds = grouped.flatMap((g) => g.fixtures.map((f) => f.id));
+  const revertableByFixtureId =
+    await getRevertableSubmissionsByFixtureIds(fixtureIds);
+
   return (
     <div className="space-y-6">
       <AdminFixturesSeasonSelect
@@ -61,6 +66,7 @@ export default async function AdminFixturesPage({
         matchweeks={matchweeks ?? []}
         teams={teams ?? []}
         grouped={grouped}
+        revertableByFixtureId={revertableByFixtureId}
         generateSeasonSchedule={generateSeasonSchedule}
       />
     </div>

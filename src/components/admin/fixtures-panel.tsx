@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { AdminFixtureForfeitDialog } from "@/components/admin/admin-fixture-forfeit-dialog";
+import { AdminFixtureRevertDialog } from "@/components/admin/admin-fixture-revert-dialog";
 import { MatchFixtureCard } from "@/components/league/match-fixture-card";
 import {
   MatchweekFixturesGroup,
@@ -14,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import type { AdminActionState } from "@/actions/admin";
+import type { RevertableSubmission } from "@/lib/queries/submissions";
 import type { FixtureWithTeams } from "@/types/database";
 
 type Matchweek = {
@@ -45,6 +47,7 @@ export function AdminFixturesPanel({
   matchweeks,
   teams,
   grouped,
+  revertableByFixtureId = new Map(),
   generateSeasonSchedule,
 }: {
   seasonId: string;
@@ -54,6 +57,7 @@ export function AdminFixturesPanel({
   matchweeks: Matchweek[];
   teams: Team[];
   grouped: Group[];
+  revertableByFixtureId?: Map<string, RevertableSubmission>;
   generateSeasonSchedule: (
     seasonId: string,
     startDate?: string
@@ -175,19 +179,30 @@ export function AdminFixturesPanel({
                   expanded={expandedIds.has(matchweek.id)}
                   onToggle={() => toggle(matchweek.id)}
                 >
-                  {fixtures.map((fixture) => (
-                    <MatchFixtureCard
-                      key={fixture.id}
-                      fixture={fixture}
-                      matchweek={matchweek}
-                      linkToReport={false}
-                      footer={
-                        fixture.status !== "completed" ? (
-                          <AdminFixtureForfeitDialog fixture={fixture} />
-                        ) : undefined
-                      }
-                    />
-                  ))}
+                  {fixtures.map((fixture) => {
+                    const revertable = revertableByFixtureId.get(fixture.id);
+                    const isForfeit =
+                      fixture.status === "completed" && !!fixture.forfeited_team_id;
+
+                    return (
+                      <MatchFixtureCard
+                        key={fixture.id}
+                        fixture={fixture}
+                        matchweek={matchweek}
+                        linkToReport={false}
+                        footer={
+                          fixture.status !== "completed" ? (
+                            <AdminFixtureForfeitDialog fixture={fixture} />
+                          ) : revertable && !isForfeit ? (
+                            <AdminFixtureRevertDialog
+                              fixture={fixture}
+                              revertable={revertable}
+                            />
+                          ) : undefined
+                        }
+                      />
+                    );
+                  })}
                 </MatchweekFixturesGroup>
               ))
             )}

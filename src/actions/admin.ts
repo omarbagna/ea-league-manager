@@ -283,6 +283,7 @@ export async function resolveDispute(
         home_score: overrideHome,
         away_score: overrideAway,
         status: "approved",
+        approved_at: new Date().toISOString(),
       })
       .eq("id", submission.id);
 
@@ -398,6 +399,65 @@ export async function adminApproveSubmission(
   revalidatePath("/standings");
   revalidatePath("/dashboard");
   return { success: "Report approved." };
+}
+
+export async function adminRevertSubmission(
+  submissionId: string
+): Promise<AdminActionState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "admin") return { error: "Forbidden" };
+
+  const { data: sub } = await supabase
+    .from("match_submissions")
+    .select("fixture_id")
+    .eq("id", submissionId)
+    .single();
+
+  if (!sub) return { error: "Submission not found" };
+
+  const { getFixtureById } = await import("@/lib/queries/fixtures");
+  const fixture = await getFixtureById(sub.fixture_id);
+  if (!fixture) return { error: "Fixture not found" };
+
+  const service = await createServiceClient();
+  const { error: revertError } = await service.rpc("revert_match_submission", {
+    p_submission_id: submissionId,
+    p_admin_id: user.id,
+  });
+  if (revertError) return { error: revertError.message };
+
+  const participantIds = [
+    fixture.home_team.profile_id,
+    fixture.away_team.profile_id,
+  ].filter((id): id is string => !!id);
+
+  for (const participantId of participantIds) {
+    await notifyUser(
+      participantId,
+      "result_reverted",
+      "Match Result Reverted",
+      "An admin reverted the finalized result for your fixture. Please submit the correct score again.",
+      { submissionId, fixtureId: sub.fixture_id }
+    );
+  }
+
+  revalidatePath("/admin/fixtures");
+  revalidatePath("/admin");
+  revalidatePath("/matches/report");
+  revalidatePath("/fixtures");
+  revalidatePath("/standings");
+  revalidatePath("/dashboard");
+  return { success: "Result reverted. Players can re-submit." };
 }
 
 async function notifyUser(
