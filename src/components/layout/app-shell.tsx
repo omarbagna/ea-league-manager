@@ -9,6 +9,7 @@ import {
   Gamepad2,
   Plus,
   Settings,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -20,9 +21,13 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/fixtures", label: "Fixtures", icon: Calendar },
   { href: "/standings", label: "Standings", icon: Trophy },
+  { href: "/history", label: "History", icon: History },
   { href: "/matches/report", label: "Submit Score", icon: Gamepad2 },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
+
+// Mobile bottom bar stays at five; History lives in the sidebar and links.
+const bottomNavItems = navItems.filter((i) => i.href !== "/history");
 
 export function AppShell({
   children,
@@ -123,7 +128,7 @@ export function AppShell({
         </main>
 
         <nav className="fixed bottom-0 left-0 z-50 flex h-16 w-full items-center justify-around border-t border-outline-variant bg-surface px-1 pb-1 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] md:hidden">
-          {navItems.map(({ href, label, icon: Icon }) => {
+          {bottomNavItems.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
             return (
               <Link
