@@ -18,11 +18,11 @@ export function OnboardingForm() {
     <main className="relative z-10 w-full max-w-[440px] rounded-xl border border-outline-variant p-6 glass-panel neon-glow-active md:p-8">
       <header className="mb-6 flex flex-col items-center gap-3 text-center">
         <AppLogo size="md" priority />
-        <h1 className="font-display text-xl font-extrabold italic tracking-tight text-primary-container uppercase drop-shadow-[0_0_8px_rgba(51,214,227,0.3)] md:text-2xl">
+        <h1 className="font-display text-xl font-extrabold tracking-tight text-primary-container uppercase md:text-2xl">
           Dark Elite League
         </h1>
         <h2 className="font-display text-lg font-semibold text-on-surface">
-          Complete Your Profile
+          Complete your profile
         </h2>
         <p className="text-sm text-on-surface-variant">
           Set your team name and EA ID. Your league admin will add you to the season when it starts.
@@ -37,13 +37,13 @@ export function OnboardingForm() {
 
       <form action={formAction} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <Label htmlFor="teamName" className="font-display text-xs uppercase tracking-wider">
+          <Label htmlFor="teamName" className="text-xs">
             Team Name
           </Label>
           <Input id="teamName" name="teamName" placeholder="e.g. Invictus FC" required />
         </div>
         <div className="flex flex-col gap-1">
-          <Label htmlFor="eaId" className="font-display text-xs uppercase tracking-wider">
+          <Label htmlFor="eaId" className="text-xs">
             EA ID
           </Label>
           <div className="relative">

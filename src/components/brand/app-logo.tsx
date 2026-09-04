@@ -35,7 +35,7 @@ export function AppLogo({
       />
       {showTitle && (
         <div className="min-w-0 leading-tight">
-          <p className="font-display text-sm font-extrabold italic uppercase tracking-tight text-primary-container">
+          <p className="font-display text-sm font-extrabold uppercase tracking-tight text-primary-container">
             Dark Elite
           </p>
           <p className="font-display text-xs font-bold uppercase tracking-widest text-on-surface-variant">

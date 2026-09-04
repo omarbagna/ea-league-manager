@@ -19,23 +19,21 @@ export function ProfileSettingsForm({
   const [state, formAction, pending] = useActionState(updatePlayerProfile, initialState);
 
   return (
-    <div className="mx-auto max-w-lg">
+    <div>
       {state.error && (
-        <p className="mb-4 rounded-lg border border-error px-3 py-2 text-sm text-error">
+        <p className="mb-4 rounded-lg border border-error/50 bg-error/10 px-3 py-2 text-sm text-error">
           {state.error}
         </p>
       )}
       {state.success && (
-        <p className="mb-4 rounded-lg border border-primary/30 bg-primary-fixed/5 px-3 py-2 text-sm text-primary-fixed">
+        <p className="mb-4 rounded-lg border border-secondary-fixed/40 bg-secondary-fixed/10 px-3 py-2 text-sm text-secondary-fixed">
           {state.success}
         </p>
       )}
 
-      <form action={formAction} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="teamName" className="font-display text-xs uppercase tracking-wider">
-            Team Name
-          </Label>
+      <form action={formAction} className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="teamName">Team name</Label>
           <Input
             id="teamName"
             name="teamName"
@@ -44,10 +42,8 @@ export function ProfileSettingsForm({
             required
           />
         </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="eaId" className="font-display text-xs uppercase tracking-wider">
-            EA ID
-          </Label>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="eaId">EA ID</Label>
           <div className="relative">
             <Gamepad2 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-outline-variant" />
             <Input
@@ -60,10 +56,15 @@ export function ProfileSettingsForm({
             />
           </div>
         </div>
-        <p className="text-xs text-on-surface-variant">
-          Changes apply to your profile and your enrolled team in the active season.
+        <p className="text-xs text-on-surface-variant sm:col-span-2">
+          Changes apply to your profile and your enrolled team in the active
+          season.
         </p>
-        <Button type="submit" loading={pending} className="mt-2 w-full sm:w-auto">
+        <Button
+          type="submit"
+          loading={pending}
+          className="w-full sm:col-span-2 sm:w-auto sm:justify-self-start"
+        >
           {pending ? "Saving…" : "Save changes"}
         </Button>
       </form>
