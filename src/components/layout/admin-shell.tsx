@@ -20,6 +20,11 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AdminSignOutButton } from "@/components/auth/sign-out-button";
 import { AppLogo } from "@/components/brand/app-logo";
+import {
+  SidebarContextChip,
+  SidebarNavGroupLabel,
+  SidebarNavItem,
+} from "@/components/layout/sidebar-nav-item";
 
 type NavItem = {
   href: string;
@@ -28,19 +33,39 @@ type NavItem = {
   exact?: boolean;
 };
 
-const adminNavItems: NavItem[] = [
-  { href: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
-  { href: "/admin/seasons", label: "Seasons", icon: CalendarRange },
-  { href: "/admin/teams", label: "Teams", icon: Users },
-  { href: "/admin/fixtures", label: "Fixtures", icon: Calendar },
-  { href: "/admin/standings", label: "Standings", icon: Trophy },
-  { href: "/admin/reports", label: "Reports", icon: ClipboardCheck },
-  { href: "/admin/disputes", label: "Disputes", icon: Gavel },
-  { href: "/admin/forfeits", label: "No-shows", icon: UserX },
-  { href: "/admin/users", label: "Users", icon: UserCog },
+const overviewItem: NavItem = {
+  href: "/admin",
+  label: "Overview",
+  icon: LayoutDashboard,
+  exact: true,
+};
+
+const navGroups: { label: string; items: NavItem[] }[] = [
+  {
+    label: "League",
+    items: [
+      { href: "/admin/seasons", label: "Seasons", icon: CalendarRange },
+      { href: "/admin/teams", label: "Teams", icon: Users },
+      { href: "/admin/fixtures", label: "Fixtures", icon: Calendar },
+      { href: "/admin/standings", label: "Standings", icon: Trophy },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { href: "/admin/reports", label: "Reports", icon: ClipboardCheck },
+      { href: "/admin/disputes", label: "Disputes", icon: Gavel },
+      { href: "/admin/forfeits", label: "No-shows", icon: UserX },
+    ],
+  },
+  {
+    label: "People",
+    items: [{ href: "/admin/users", label: "Users", icon: UserCog }],
+  },
 ];
 
-const bottomNavItems = adminNavItems.slice(0, 4);
+const allItems = [overviewItem, ...navGroups.flatMap((g) => g.items)];
+const bottomNavItems = allItems.slice(0, 4);
 
 function isNavActive(pathname: string, href: string, exact?: boolean): boolean {
   if (exact) return pathname === href;
@@ -56,36 +81,42 @@ function AdminSidebarNav({
 }) {
   return (
     <>
-      <div className="mb-8 px-2 pt-2">
+      <div className="mb-4 px-2 pt-2">
         <AppLogo href="/admin" size="sm" showTitle />
-        <p className="font-data mt-3 text-xs text-on-surface-variant uppercase">Admin</p>
+        <div>
+          <SidebarContextChip label="Admin console" />
+        </div>
       </div>
-      <ul className="flex flex-1 flex-col gap-1 overflow-y-auto">
-        {adminNavItems.map(({ href, label, icon: Icon, exact }) => {
-          const active = isNavActive(pathname, href, exact);
-          return (
-            <li key={href}>
-              <Link
-                href={href}
-                onClick={onNavigate}
-                className={cn(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 transition-all",
-                  active
-                    ? "bg-primary-container font-bold text-on-primary-container shadow-[inset_0_0_8px_rgba(51,214,227,0.15)]"
-                    : "text-on-surface-variant hover:bg-surface-container-highest"
-                )}
-              >
-                <Icon className="size-5 shrink-0" />
-                <span>{label}</span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="flex flex-1 flex-col gap-0.5 overflow-y-auto pb-2">
+        <SidebarNavItem
+          href={overviewItem.href}
+          label={overviewItem.label}
+          icon={overviewItem.icon}
+          active={isNavActive(pathname, overviewItem.href, overviewItem.exact)}
+          onNavigate={onNavigate}
+        />
+        {navGroups.map((group) => (
+          <div key={group.label}>
+            <SidebarNavGroupLabel>{group.label}</SidebarNavGroupLabel>
+            <div className="flex flex-col gap-0.5">
+              {group.items.map((item) => (
+                <SidebarNavItem
+                  key={item.href}
+                  href={item.href}
+                  label={item.label}
+                  icon={item.icon}
+                  active={isNavActive(pathname, item.href, item.exact)}
+                  onNavigate={onNavigate}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
       <div className="mt-auto space-y-2 border-t border-outline-variant pt-4">
         <Link href="/dashboard" onClick={onNavigate}>
           <Button variant="outline" className="w-full">
-            Player App
+            Player app
           </Button>
         </Link>
         <AdminSignOutButton fullWidth />
@@ -113,7 +144,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   const closeMenu = () => setMenuOpen(false);
 
-  const moreNavActive = adminNavItems
+  const moreNavActive = allItems
     .slice(4)
     .some(({ href, exact }) => isNavActive(pathname, href, exact));
 
@@ -124,7 +155,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </nav>
 
       {menuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true">
           <button
             type="button"
             className="absolute inset-0 bg-black/60"
@@ -165,36 +196,62 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
 
-        <nav className="fixed bottom-0 left-0 z-50 flex h-16 w-full items-center justify-around border-t border-outline-variant bg-surface px-1 pb-1 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] md:hidden">
+        <nav className="fixed bottom-0 left-0 z-40 flex h-16 w-full items-center justify-around border-t border-outline-variant bg-surface px-1 pb-1 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] md:hidden">
           {bottomNavItems.map(({ href, label, icon: Icon, exact }) => {
             const active = isNavActive(pathname, href, exact);
             return (
               <Link
                 key={href}
                 href={href}
-                className={cn(
-                  "flex min-w-0 flex-1 flex-col items-center gap-0.5 p-2 text-[10px]",
-                  active ? "border-t-2 border-primary text-primary" : "text-on-surface-variant"
-                )}
+                aria-current={active ? "page" : undefined}
+                className="flex min-w-0 flex-1 flex-col items-center gap-1 p-1.5 text-[11px]"
               >
-                <Icon className="size-6 shrink-0" />
-                <span className="truncate">{label.split(" ")[0]}</span>
+                <span
+                  className={cn(
+                    "flex size-9 items-center justify-center rounded-lg transition-colors",
+                    active
+                      ? "bg-primary-container/[0.14] text-primary-fixed"
+                      : "text-on-surface-variant"
+                  )}
+                >
+                  <Icon className="size-5 shrink-0" />
+                </span>
+                <span
+                  className={cn(
+                    "truncate",
+                    active ? "text-primary-fixed" : "text-on-surface-variant"
+                  )}
+                >
+                  {label.split(" ")[0]}
+                </span>
               </Link>
             );
           })}
           <button
             type="button"
-            className={cn(
-              "flex min-w-0 flex-1 flex-col items-center gap-0.5 p-2 text-[10px]",
-              moreNavActive || menuOpen
-                ? "border-t-2 border-primary text-primary"
-                : "text-on-surface-variant"
-            )}
             aria-label="Open menu"
             onClick={() => setMenuOpen(true)}
+            className="flex min-w-0 flex-1 flex-col items-center gap-1 p-1.5 text-[11px]"
           >
-            <Menu className="size-6 shrink-0" />
-            <span>Menu</span>
+            <span
+              className={cn(
+                "flex size-9 items-center justify-center rounded-lg transition-colors",
+                moreNavActive || menuOpen
+                  ? "bg-primary-container/[0.14] text-primary-fixed"
+                  : "text-on-surface-variant"
+              )}
+            >
+              <Menu className="size-5 shrink-0" />
+            </span>
+            <span
+              className={cn(
+                moreNavActive || menuOpen
+                  ? "text-primary-fixed"
+                  : "text-on-surface-variant"
+              )}
+            >
+              Menu
+            </span>
           </button>
         </nav>
         <div className="h-16 md:hidden" />

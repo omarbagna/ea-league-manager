@@ -9,6 +9,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 import { SeasonsList } from "@/components/admin/seasons-list";
 import { getFixturesForSeason } from "@/lib/queries/fixtures";
 
@@ -63,37 +64,59 @@ export default async function AdminSeasonsPage() {
     );
   }
 
+  const seasonList = seasons ?? [];
+  const hasActive = seasonList.some((s) => s.status === "active");
+
   return (
-    <div className="space-y-8">
-      <h1 className="font-display text-2xl font-bold text-primary">Seasons</h1>
+    <div className="mx-auto max-w-[900px] space-y-8">
+      <div>
+        <h1 className="font-display text-3xl font-bold tracking-tight text-primary">
+          Seasons
+        </h1>
+        <p className="mt-1 text-on-surface-variant">
+          Create a season, generate its schedule, set it live, and end it when
+          the last matchweek is done.
+          {!hasActive && seasonList.length > 0 && (
+            <span className="text-warn"> No season is active right now.</span>
+          )}
+        </p>
+      </div>
 
-      <form
-        action={createSeasonForm}
-        className="max-w-md space-y-4 rounded-xl border border-outline-variant p-4"
-      >
-        <h2 className="font-display font-semibold">Create Season</h2>
-        <div>
-          <Label htmlFor="name">Name</Label>
-          <Input id="name" name="name" placeholder="Season 25" required />
-        </div>
-        <div>
-          <Label htmlFor="startsAt">Start date</Label>
-          <DatePicker id="startsAt" name="startsAt" placeholder="Pick start date" />
-          <p className="mt-1 text-xs text-on-surface-variant">
-            End date is set automatically when you generate fixtures (day after the last
-            matchweek).
-          </p>
-        </div>
-        <SubmitButton pendingText="Creating…">Create</SubmitButton>
-      </form>
+      <Card variant="raised" className="max-w-md">
+        <form action={createSeasonForm} className="space-y-4 p-5">
+          <h2 className="font-display font-semibold text-primary">New season</h2>
+          <div>
+            <Label htmlFor="name">Name</Label>
+            <Input id="name" name="name" placeholder="Season 25" required />
+          </div>
+          <div>
+            <Label htmlFor="startsAt">Start date</Label>
+            <DatePicker
+              id="startsAt"
+              name="startsAt"
+              placeholder="Pick start date"
+            />
+            <p className="mt-1 text-xs text-on-surface-variant">
+              The end date is set automatically when you generate fixtures — the
+              day after the last matchweek.
+            </p>
+          </div>
+          <SubmitButton pendingText="Creating…">Create season</SubmitButton>
+        </form>
+      </Card>
 
-      <SeasonsList
-        seasons={seasons ?? []}
-        seasonMeta={seasonMeta}
-        activateSeason={activateSeason}
-        updateSeason={updateSeason}
-        generateSeasonSchedule={generateSeasonSchedule}
-      />
+      <div>
+        <h2 className="mb-3 font-data text-xs uppercase tracking-wider text-on-surface-variant">
+          All seasons
+        </h2>
+        <SeasonsList
+          seasons={seasonList}
+          seasonMeta={seasonMeta}
+          activateSeason={activateSeason}
+          updateSeason={updateSeason}
+          generateSeasonSchedule={generateSeasonSchedule}
+        />
+      </div>
     </div>
   );
 }
