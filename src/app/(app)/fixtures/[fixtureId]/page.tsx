@@ -51,8 +51,8 @@ function TeamHead({
     <Link
       href={`/teams/${team.id}`}
       className={cn(
-        "flex flex-1 items-center gap-3 transition-colors hover:text-primary",
-        align === "right" && "flex-row-reverse text-right"
+        "flex min-w-0 flex-1 items-center gap-3 transition-colors hover:text-primary",
+        align === "right" && "sm:flex-row-reverse sm:text-right"
       )}
     >
       <TeamCrest
@@ -60,13 +60,18 @@ function TeamHead({
         seed={team.crestSeed}
         crestUrl={team.crestUrl}
         size="md"
-        className="shrink-0"
+        className="size-12 shrink-0 sm:size-16"
       />
-      <div className={cn("flex min-w-0 flex-col", align === "right" && "items-end")}>
-        <span className="truncate font-display text-lg font-bold leading-tight">
+      <div
+        className={cn(
+          "flex min-w-0 flex-col",
+          align === "right" && "sm:items-end"
+        )}
+      >
+        <span className="truncate font-display text-base font-bold leading-tight sm:text-lg">
           {team.name}
         </span>
-        <span className="font-data text-[11px] text-outline">
+        <span className="truncate font-data text-[11px] text-outline">
           {team.eaId?.trim() || "—"}
         </span>
         {team.position != null && (
@@ -259,14 +264,14 @@ export default async function MatchCentrePage({
           </StatusPill>
         </div>
 
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-6 sm:gap-6 sm:px-8">
+        <div className="flex flex-col gap-4 px-4 py-6 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-6 sm:px-8">
           <TeamHead team={home} align="left" />
 
-          <div className="flex min-w-[92px] flex-col items-center">
+          <div className="flex shrink-0 flex-col items-center sm:min-w-[92px]">
             {completed ? (
               <span className="font-data text-4xl font-bold tracking-widest text-secondary-fixed">
                 <CountUpScore value={fixture.homeScore ?? 0} />
-                <span className="mx-1.5 text-outline-variant">-</span>
+                <span className="mx-1.5 text-on-surface-variant">-</span>
                 <CountUpScore value={fixture.awayScore ?? 0} />
               </span>
             ) : (
@@ -312,14 +317,14 @@ export default async function MatchCentrePage({
           </span>
         </CardHeader>
         <CardContent className="pt-2">
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pb-3">
-            <span className="text-right font-display text-sm font-semibold">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 pb-2">
+            <span className="min-w-0 truncate text-right font-data text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">
               {home.name}
             </span>
             <span className="text-center font-data text-[10px] uppercase tracking-widest text-outline">
               form
             </span>
-            <span className="font-display text-sm font-semibold">
+            <span className="min-w-0 truncate font-data text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">
               {away.name}
             </span>
           </div>
