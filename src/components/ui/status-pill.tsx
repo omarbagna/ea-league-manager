@@ -6,6 +6,7 @@ import {
   CircleDashed,
   CircleDot,
   Clock,
+  Flag,
   Gavel,
   Radio,
 } from "lucide-react";
@@ -24,6 +25,7 @@ const pillVariants = cva(
           "border-outline-variant bg-surface-container text-on-surface-variant",
         info: "border-primary-container/35 bg-primary-container/10 text-primary-fixed",
         pending: "border-warn/40 bg-warn-container/25 text-warn",
+        warn: "border-warn/40 bg-warn-container/25 text-warn",
         positive:
           "border-secondary-fixed/40 bg-secondary-fixed/12 text-secondary-fixed",
         critical: "border-error/45 bg-error/12 text-error",
@@ -41,6 +43,7 @@ const DEFAULT_ICON: Record<
   neutral: CircleDashed,
   info: CircleDot,
   pending: Clock,
+  warn: Flag,
   positive: CircleCheck,
   critical: AlertTriangle,
   live: Radio,
