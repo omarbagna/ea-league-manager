@@ -93,6 +93,7 @@ export function StandingsTable({
   showZones,
   positionOffset = 0,
   totalTeams,
+  animateReorder,
 }: {
   standings: StandingRow[];
   highlightTeamId?: string;
@@ -104,6 +105,8 @@ export function StandingsTable({
   positionOffset?: number;
   /** full league size, when `standings` is a windowed slice */
   totalTeams?: number;
+  /** give each row a view-transition-name so live re-orders animate */
+  animateReorder?: boolean;
 }) {
   const total = totalTeams ?? standings.length;
   const zonesOn = showZones ?? !compact;
@@ -149,6 +152,11 @@ export function StandingsTable({
             return (
               <tr
                 key={row.team_id}
+                style={
+                  animateReorder
+                    ? { viewTransitionName: `std-${row.team_id}` }
+                    : undefined
+                }
                 className={cn(
                   "border-b border-outline-variant/50 transition-colors hover:bg-surface-container-high/50",
                   highlighted && "bg-primary-fixed/[0.06]"

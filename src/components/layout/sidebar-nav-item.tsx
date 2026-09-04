@@ -67,7 +67,7 @@ export function SidebarContextChip({
   return (
     <span className="mt-3 inline-flex max-w-full items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container px-2.5 py-1">
       {live && (
-        <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-secondary-fixed" />
+        <span className="size-1.5 shrink-0 rounded-full bg-secondary-fixed" />
       )}
       <span className="truncate font-data text-[11px] uppercase tracking-wider text-on-surface-variant">
         {label}

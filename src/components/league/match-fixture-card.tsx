@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { TeamCrest } from "@/components/league/team-crest";
+import { CountUpScore } from "@/components/league/count-up-score";
 import { StatusPill } from "@/components/ui/status-pill";
 import { formatWeekendRange } from "@/lib/format-weekend";
 import { isMatchweekEnded } from "@/lib/forfeit-eligibility";
@@ -137,9 +138,9 @@ export function MatchFixtureCard({
             </StatusPill>
             <div className="rounded border border-outline-variant bg-surface-container-lowest px-3 py-1 neon-glow-active">
               <span className="font-data text-2xl font-bold tracking-widest text-secondary-fixed">
-                {fixture.home_score}
+                <CountUpScore value={fixture.home_score ?? 0} />
                 <span className="mx-1 text-outline-variant">-</span>
-                {fixture.away_score}
+                <CountUpScore value={fixture.away_score ?? 0} />
               </span>
             </div>
           </>
