@@ -6,7 +6,9 @@ import { approveForfeitReport, rejectForfeitReport } from "@/actions/admin";
 import { EvidenceImagePreview } from "@/components/matches/evidence-image-preview";
 import { MatchScoreStatus } from "@/components/matches/match-score-status";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
+import { WarningNote } from "@/components/ui/warning-note";
+import { ResolverCard } from "@/components/admin/resolver-card";
 import type { ForfeitReport } from "@/types/database";
 
 export function ForfeitResolver({
@@ -52,29 +54,19 @@ export function ForfeitResolver({
   };
 
   return (
-    <div
-      className={cn(
-        "space-y-6 rounded-xl border border-outline-variant bg-surface-container-low p-4",
-        pending && "pointer-events-none opacity-60"
-      )}
-      aria-busy={pending}
+    <ResolverCard
+      tone="critical"
+      kind="No-show"
+      matchweekNumber={matchweekNumber}
+      busy={pending}
+      summary={
+        <>
+          <span className="text-on-surface">{reporterTeamName}</span> reports that{" "}
+          <span className="text-on-surface">{absentTeamName}</span> did not show.
+          {report.notes ? ` Player notes: ${report.notes}` : ""}
+        </>
+      }
     >
-      <div>
-        <p className="font-data text-sm text-error">NO-SHOW FORFEIT</p>
-        <p className="mt-1 text-sm text-on-surface-variant">
-          <span className="text-on-surface">{reporterTeamName}</span> reports{" "}
-          <span className="text-on-surface">{absentTeamName}</span> did not show
-        </p>
-        {report.notes && (
-          <p className="mt-2 text-sm text-on-surface-variant">
-            Player notes: {report.notes}
-          </p>
-        )}
-        <p className="mt-1 font-data text-xs text-outline">
-          Matchweek {matchweekNumber ?? "—"}
-        </p>
-      </div>
-
       <MatchScoreStatus
         homeTeamName={homeName}
         awayTeamName={awayName}
@@ -93,18 +85,21 @@ export function ForfeitResolver({
         emptyMessage="No screenshot provided."
       />
 
-      <label className="block">
-        <span className="mb-1 block font-data text-xs uppercase tracking-widest text-outline">
-          Admin notes (optional)
-        </span>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`forfeit-notes-${report.id}`}>Admin notes (optional)</Label>
         <textarea
+          id={`forfeit-notes-${report.id}`}
           value={adminNotes}
           onChange={(e) => setAdminNotes(e.target.value)}
           rows={2}
           disabled={pending}
-          className="w-full rounded-lg border border-outline-variant bg-surface-container px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none"
+          className="w-full rounded-lg border border-outline-variant bg-surface-container px-3 py-2 text-sm text-on-surface placeholder:text-outline focus:border-primary-container focus:outline-none"
         />
-      </label>
+      </div>
+
+      <WarningNote tone="warn">
+        Approving records a 3–0 win for {reporterTeamName} and updates standings.
+      </WarningNote>
 
       {message.error && <p className="text-sm text-error">{message.error}</p>}
 
@@ -128,6 +123,6 @@ export function ForfeitResolver({
           {pendingAction === "rejected" ? "Rejecting…" : "Reject report"}
         </Button>
       </div>
-    </div>
+    </ResolverCard>
   );
 }
