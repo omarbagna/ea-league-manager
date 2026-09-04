@@ -13,6 +13,7 @@ import {
   ClipboardCheck,
   UserX,
   UserCog,
+  Swords,
   Menu,
   X,
 } from "lucide-react";
@@ -61,6 +62,12 @@ const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "People",
     items: [{ href: "/admin/users", label: "Users", icon: UserCog }],
+  },
+  {
+    label: "Tournaments",
+    items: [
+      { href: "/admin/tournaments", label: "Tournaments", icon: Swords },
+    ],
   },
 ];
 
