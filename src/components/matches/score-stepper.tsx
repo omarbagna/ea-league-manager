@@ -32,7 +32,7 @@ export function ScoreStepper({
           </span>
         </div>
         <div className="min-w-0">
-          <span className="font-data text-[10px] uppercase text-outline">
+          <span className="font-data text-[11px] uppercase text-outline">
             {isHome ? "Home (You)" : label}
           </span>
           <div className="font-display text-lg font-bold text-on-surface">

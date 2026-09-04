@@ -53,24 +53,28 @@ function MovementCell({ delta }: { delta: number | undefined }) {
   );
 }
 
+/** Distinct colour AND shape per result — circle / square / dashed square —
+ *  so form reads without relying on colour alone. */
+const FORM_STYLE: Record<MatchResult, string> = {
+  W: "rounded-full border-secondary-fixed/50 bg-secondary-fixed/20 text-secondary-fixed",
+  D: "rounded-[3px] border-outline-variant bg-surface-container-highest text-on-surface-variant",
+  L: "rounded-md border-dashed border-error/60 bg-error/10 text-error",
+};
+
 export function FormRun({ form }: { form: MatchResult[] | undefined }) {
   if (!form?.length) {
     return <span className="font-data text-xs text-outline">—</span>;
   }
-  const tone: Record<MatchResult, string> = {
-    W: "bg-secondary-fixed/15 text-secondary-fixed border-secondary-fixed/40",
-    D: "bg-surface-container-highest text-on-surface-variant border-outline-variant",
-    L: "bg-error/10 text-error border-error/40",
-  };
   return (
     <span className="inline-flex gap-1">
       {form.map((r, i) => (
         <span
           key={i}
           title={r === "W" ? "Win" : r === "D" ? "Draw" : "Loss"}
+          aria-label={r === "W" ? "Win" : r === "D" ? "Draw" : "Loss"}
           className={cn(
-            "flex size-5 items-center justify-center rounded border font-data text-[10px] font-bold",
-            tone[r]
+            "flex size-5 items-center justify-center border font-data text-[10px] font-bold",
+            FORM_STYLE[r]
           )}
         >
           {r}

@@ -27,7 +27,7 @@ export function EvidenceImagePreview({
     return (
       <div className={cn("text-sm text-on-surface-variant", className)}>
         {label && (
-          <p className="mb-1 font-data text-[10px] uppercase tracking-widest text-outline">
+          <p className="mb-1 font-data text-[11px] uppercase tracking-widest text-outline">
             {label}
           </p>
         )}
@@ -39,7 +39,7 @@ export function EvidenceImagePreview({
   return (
     <div className={cn("flex w-full flex-col gap-2", className)}>
       {label && (
-        <p className="font-data text-[10px] uppercase tracking-widest text-outline">{label}</p>
+        <p className="font-data text-[11px] uppercase tracking-widest text-outline">{label}</p>
       )}
       <Dialog>
         <DialogTrigger asChild>
