@@ -21,7 +21,7 @@ function Row({ row }: { row: LeaderRow }) {
     >
       <span
         aria-hidden
-        className="absolute inset-y-1 left-0 rounded-r-sm bg-primary-container/25"
+        className="absolute inset-y-1 left-0 rounded-r-sm bg-primary-container/[0.11]"
         style={{ width: `${Math.round(row.fill * 100)}%` }}
       />
       <span className="relative z-10 w-4 shrink-0 text-center font-data text-xs text-outline">
@@ -66,7 +66,7 @@ function BoardCard({ board }: { board: LeaderBoard }) {
     <Card variant="outline" className="flex flex-col">
       <CardHeader className="gap-0.5">
         <CardTitle className="text-base">{board.title}</CardTitle>
-        <p className="font-data text-[11px] text-on-surface-variant">
+        <p className="text-[11px] leading-snug text-on-surface-variant">
           {board.blurb}
         </p>
       </CardHeader>
@@ -132,7 +132,7 @@ export default async function LeaderboardsPage() {
           description="The boards fill in automatically as matchweek results are confirmed."
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           {data.boards.map((board) => (
             <BoardCard key={board.id} board={board} />
           ))}

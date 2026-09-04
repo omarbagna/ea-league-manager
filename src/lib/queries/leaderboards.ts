@@ -340,6 +340,23 @@ export async function getSeasonLeaderboards(
     ),
   });
 
+  boards.push({
+    id: "big-game",
+    title: "Most goals in a match",
+    blurb: "Highest tally by one team in a single game",
+    rows: rankRows(
+      played
+        .filter((a) => a.bestGame)
+        .map((agg) => ({
+          agg,
+          sortKey: agg.bestGame!.goals,
+          value: `${agg.bestGame!.goals}`,
+          sub: agg.bestGame!.label,
+        })),
+      { viewerTeamId }
+    ),
+  });
+
   return {
     season: { id: season.id, name: season.name },
     playedFixtures: fixtures.length,
