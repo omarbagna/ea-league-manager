@@ -244,7 +244,7 @@ export default async function ReportMatchPage({
     <div className="mx-auto w-full max-w-[1280px] px-4 py-6 md:px-12">
       <div className="mb-6 border-b border-outline-variant/50 pb-4">
         <div className="mb-1 flex items-center gap-2">
-          <span className="size-2 animate-pulse rounded-full bg-secondary-fixed shadow-[0_0_8px_#c3f400]" />
+          <span className="size-2 animate-pulse rounded-full bg-secondary-fixed shadow-[0_0_8px_#b7e12e]" />
           <span className="font-data text-xs uppercase tracking-widest text-secondary-fixed">
             Action Required
           </span>
@@ -333,7 +333,7 @@ export default async function ReportMatchPage({
         )}
 
         {!hasReportingContent && (
-          <section className="rounded-xl border border-outline-variant bg-[#0f1115] p-8 text-center">
+          <section className="rounded-xl border border-outline-variant bg-card p-8 text-center">
             <p className="text-on-surface-variant">
               {activeMatchweek && pickerFixtures.length > 0
                 ? "Choose a matchweek fixture above to report a score, or wait for an opponent submission."

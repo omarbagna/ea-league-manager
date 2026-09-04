@@ -49,7 +49,7 @@ export default async function AdminStandingsPage({
         selectedSeasonId={selectedSeason.id}
       />
 
-      <section className="overflow-hidden rounded-xl border border-outline-variant bg-[#0f1115] glow-effect">
+      <section className="overflow-hidden rounded-xl border border-outline-variant bg-card glow-effect">
         {standings.length === 0 ? (
           <p className="p-8 text-center text-on-surface-variant">
             No results recorded for this season yet.

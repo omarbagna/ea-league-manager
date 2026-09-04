@@ -1,51 +1,67 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #111317;
-  --color-foreground: #e2e2e8;
-  --color-surface: #111317;
-  --color-surface-dim: #111317;
-  --color-surface-bright: #37393e;
-  --color-surface-container-lowest: #0c0e12;
-  --color-surface-container-low: #1a1c20;
-  --color-surface-container: #1e2024;
-  --color-surface-container-high: #282a2e;
-  --color-surface-container-highest: #333539;
-  --color-on-surface: #e2e2e8;
-  --color-on-surface-variant: #b9cacb;
-  --color-outline: #849495;
-  --color-outline-variant: #3b494b;
-  --color-surface-tint: #00dbe9;
-  --color-primary: #dbfcff;
-  --color-on-primary: #00363a;
-  --color-primary-container: #00f0ff;
-  --color-on-primary-container: #006970;
-  --color-primary-fixed: #7df4ff;
-  --color-primary-fixed-dim: #00dbe9;
-  --color-secondary-fixed: #c3f400;
-  --color-secondary-fixed-dim: #abd600;
-  --color-on-secondary-fixed: #161e00;
-  --color-secondary-container: #c3f400;
-  --color-on-secondary-container: #556d00;
-  --color-tertiary: #faf3ff;
-  --color-tertiary-container: #e1d2ff;
-  --color-error: #ffb4ab;
-  --color-on-error: #690005;
-  --color-error-container: #93000a;
+  /* ---- Surfaces: cool near-black ramp, each step a real contrast jump ---- */
+  --color-background: #0b0d11;
+  --color-foreground: #e8eaef;
+  --color-surface: #0b0d11;
+  --color-surface-dim: #0b0d11;
+  --color-surface-bright: #333a46;
+  --color-surface-container-lowest: #0e1116;
+  --color-surface-container-low: #14171d;
+  --color-surface-container: #1b1f27;
+  --color-surface-container-high: #232833;
+  --color-surface-container-highest: #2b313d;
+  --color-on-surface: #e8eaef;
+  --color-on-surface-variant: #a8afba;
+  --color-outline: #6c7480;
+  --color-outline-variant: #272d37;
+  --color-surface-tint: #33d6e3;
+
+  /* ---- Accent: one cyan, pulled back from neon so it survives on dark ---- */
+  --color-primary: #d6fbff;
+  --color-on-primary: #06373d;
+  --color-primary-container: #33d6e3;
+  --color-on-primary-container: #053035;
+  --color-primary-fixed: #8fecf4;
+  --color-primary-fixed-dim: #33d6e3;
+
+  /* ---- Lime: demoted to a semantic — live / positive only ---- */
+  --color-secondary-fixed: #b7e12e;
+  --color-secondary-fixed-dim: #a1c926;
+  --color-on-secondary-fixed: #182200;
+  --color-secondary-container: #b7e12e;
+  --color-on-secondary-container: #3d4f00;
+
+  --color-tertiary: #f6f3ff;
+  --color-tertiary-container: #dcd2f5;
+
+  /* ---- Error / critical ---- */
+  --color-error: #f5877f;
+  --color-on-error: #5c0006;
+  --color-error-container: #8c1d18;
   --color-on-error-container: #ffdad6;
-  --color-card: #0f1115;
-  --color-card-foreground: #e2e2e8;
-  --color-muted: #1e2024;
-  --color-muted-foreground: #b9cacb;
-  --color-border: #3b494b;
-  --color-input: #1a1c20;
-  --color-ring: #00f0ff;
-  --color-destructive: #ffb4ab;
-  --color-destructive-foreground: #690005;
-  --color-accent: #00f0ff;
-  --color-accent-foreground: #00363a;
-  --color-popover: #1e2024;
-  --color-popover-foreground: #e2e2e8;
+
+  /* ---- Warning (new) ---- */
+  --color-warn: #e2a942;
+  --color-on-warn: #3a2600;
+  --color-warn-container: #5c4406;
+  --color-on-warn-container: #ffdfab;
+
+  --color-card: #12151b;
+  --color-card-foreground: #e8eaef;
+  --color-muted: #1b1f27;
+  --color-muted-foreground: #a8afba;
+  --color-border: #272d37;
+  --color-input: #14171d;
+  --color-ring: #33d6e3;
+  --color-destructive: #f5877f;
+  --color-destructive-foreground: #5c0006;
+  --color-accent: #33d6e3;
+  --color-accent-foreground: #053035;
+  --color-popover: #1b1f27;
+  --color-popover-foreground: #e8eaef;
+
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
@@ -68,26 +84,55 @@
 }
 
 @layer utilities {
+  /*
+   * Elevation roles — depth comes from a surface ramp + tinted shadow.
+   * The cyan halo is reserved for `.accent-glow` (one per screen).
+   */
+
+  /* Role: raised card */
   .glow-effect {
-    box-shadow: inset 0 0 0 1px rgba(0, 240, 255, 0.1);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 12px 28px -18px rgba(0, 24, 28, 0.7);
+    transition:
+      box-shadow 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.2s ease;
   }
   .glow-effect:hover {
     box-shadow:
-      inset 0 0 0 1px rgba(0, 240, 255, 0.3),
-      0 0 15px rgba(0, 240, 255, 0.1);
+      0 1px 2px rgba(0, 0, 0, 0.45),
+      0 18px 40px -20px rgba(0, 28, 32, 0.82);
   }
+
+  /* Finalized / completed emphasis — restrained accent tint, no bloom */
   .neon-glow-active {
-    box-shadow:
-      inset 0 0 0 1px rgba(0, 240, 255, 0.2),
-      0 0 12px rgba(0, 240, 255, 0.15);
+    border-color: rgba(51, 214, 227, 0.32);
+    box-shadow: inset 0 0 0 1px rgba(51, 214, 227, 0.1);
+  }
+
+  /* Interactive hover for reportable fixtures */
+  .neon-glow-hover {
+    transition:
+      border-color 0.18s ease,
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
   }
   .neon-glow-hover:hover {
-    box-shadow:
-      inset 0 0 0 1px rgba(0, 240, 255, 0.15),
-      0 0 20px rgba(0, 240, 255, 0.08);
+    border-color: rgba(51, 214, 227, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 14px 34px -22px rgba(0, 30, 34, 0.85);
   }
+
+  /* The ONE accent glow per screen: primary CTA or a genuinely live state */
+  .accent-glow {
+    box-shadow:
+      0 0 0 1px rgba(51, 214, 227, 0.3),
+      0 0 24px -6px rgba(51, 214, 227, 0.4);
+  }
+
   .glass-panel {
-    background: rgba(15, 17, 21, 0.85);
+    background: rgba(20, 23, 29, 0.82);
     backdrop-filter: blur(16px);
   }
   .font-display {
@@ -96,8 +141,12 @@
   .font-data {
     font-family: var(--font-jetbrains), monospace;
     font-size: 0.875rem;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
   .score-pulse {
     animation: score-pulse 0.3s ease-out;
@@ -106,11 +155,11 @@
 
 @keyframes score-pulse {
   0% {
-    color: #c3f400;
+    color: #b7e12e;
     transform: scale(1.08);
   }
   100% {
-    color: #00f0ff;
+    color: #33d6e3;
     transform: scale(1);
   }
 }

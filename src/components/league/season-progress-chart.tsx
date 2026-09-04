@@ -29,8 +29,8 @@ export function SeasonProgressChart({
         <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="pointsGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#00f0ff" stopOpacity={0.4} />
-              <stop offset="100%" stopColor="#00f0ff" stopOpacity={0} />
+              <stop offset="0%" stopColor="#33d6e3" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="#33d6e3" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="4 4" stroke="#3b494b" vertical={false} />
@@ -51,7 +51,7 @@ export function SeasonProgressChart({
           <Area
             type="monotone"
             dataKey="points"
-            stroke="#00f0ff"
+            stroke="#33d6e3"
             strokeWidth={2}
             fill="url(#pointsGradient)"
           />

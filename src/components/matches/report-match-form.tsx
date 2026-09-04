@@ -45,7 +45,7 @@ export function ReportMatchForm({
   return (
     <section
       className={cn(
-        "relative flex flex-col overflow-hidden rounded-xl border border-outline-variant bg-[#0f1115] p-4 shadow-lg",
+        "relative flex flex-col overflow-hidden rounded-xl border border-outline-variant bg-card p-4 shadow-lg",
         pending && "pointer-events-none opacity-60"
       )}
       aria-busy={pending}

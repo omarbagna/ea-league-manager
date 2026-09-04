@@ -137,7 +137,7 @@ export function DisputeResolver({
         </Button>
       </div>
 
-      <section className="relative flex flex-col overflow-hidden rounded-xl border border-outline-variant bg-[#0f1115] p-4 shadow-lg">
+      <section className="relative flex flex-col overflow-hidden rounded-xl border border-outline-variant bg-card p-4 shadow-lg">
         <div className="absolute top-0 left-0 h-0.5 w-full bg-gradient-to-r from-transparent via-primary-container to-transparent opacity-50" />
         <div className="mb-4 flex justify-between">
           <div>

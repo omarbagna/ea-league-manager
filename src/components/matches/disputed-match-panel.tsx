@@ -42,7 +42,7 @@ export function DisputedMatchPanel({
   const opponentEvidenceUrl = isSubmitter ? counterScreenshotUrl : submitterScreenshotUrl;
 
   return (
-    <section className="relative flex flex-col overflow-hidden rounded-xl border border-error/40 bg-[#0f1115] p-4 shadow-lg">
+    <section className="relative flex flex-col overflow-hidden rounded-xl border border-error/40 bg-card p-4 shadow-lg">
       <div className="absolute top-0 left-0 h-0.5 w-full bg-gradient-to-r from-transparent via-error to-transparent opacity-60" />
       <div className="mb-4">
         <div className="mb-1 flex items-center gap-1 text-error">
