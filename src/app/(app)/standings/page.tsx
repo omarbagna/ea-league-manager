@@ -66,12 +66,20 @@ export default async function StandingsPage() {
               : ""}
           </p>
         </div>
-        <Link
-          href="/history"
-          className="font-data text-xs text-primary-fixed hover:underline"
-        >
-          Past champions →
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/leaderboards"
+            className="font-data text-xs text-primary-fixed hover:underline"
+          >
+            Leaderboards →
+          </Link>
+          <Link
+            href="/history"
+            className="font-data text-xs text-primary-fixed hover:underline"
+          >
+            Past champions →
+          </Link>
+        </div>
       </div>
 
       {standings.length === 0 ? (

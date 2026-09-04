@@ -8,6 +8,7 @@ import {
   Calendar,
   Trophy,
   Gamepad2,
+  Medal,
   Plus,
   Settings,
   History,
@@ -36,6 +37,7 @@ const primaryNav = [
 ];
 
 const secondaryNav = [
+  { href: "/leaderboards", label: "Leaderboards", icon: Medal },
   { href: "/history", label: "History", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
@@ -45,6 +47,7 @@ const PAGE_TITLES: [string, string][] = [
   ["/fixtures", "Fixtures"],
   ["/standings", "Standings"],
   ["/matches/report", "Match Reporting"],
+  ["/leaderboards", "Leaderboards"],
   ["/history", "Hall of Fame"],
   ["/settings", "Settings"],
   ["/teams", "Team"],
