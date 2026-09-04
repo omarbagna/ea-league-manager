@@ -11,6 +11,7 @@ import {
   StandingsTable,
   LeagueSpotlight,
 } from "@/components/league/standings-table";
+import { StandingsLiveRefresh } from "@/components/league/standings-live-refresh";
 import { EmptyState } from "@/components/ui/empty-state";
 
 export default async function StandingsPage() {
@@ -81,12 +82,14 @@ export default async function StandingsPage() {
         />
       ) : (
         <div className="space-y-6">
+          <StandingsLiveRefresh seasonId={season.id} />
           <section className="overflow-hidden rounded-xl border border-outline-variant bg-card glow-effect">
             <StandingsTable
               standings={standings}
               highlightTeamId={teamId ?? undefined}
               movement={movement}
               formByTeam={formByTeam}
+              animateReorder
             />
           </section>
           <LeagueSpotlight standings={standings} formByTeam={formByTeam} />

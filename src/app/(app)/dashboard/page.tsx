@@ -17,7 +17,7 @@ import { ThisWeekBlock } from "@/components/league/this-week-block";
 import { SeasonStatsStrip } from "@/components/league/season-stats-strip";
 import { SeasonProgressChart } from "@/components/league/season-progress-chart";
 import { formatWeekendRange } from "@/lib/format-weekend";
-import { isMatchweekEnded } from "@/lib/forfeit-eligibility";
+import { isMatchweekEnded, isMatchweekActive } from "@/lib/forfeit-eligibility";
 import { getForfeitEligibility } from "@/lib/queries/forfeits";
 
 export default async function DashboardPage() {
@@ -95,9 +95,14 @@ export default async function DashboardPage() {
         (nextFixture.matchweek as { ends_at?: string | null })?.ends_at
       )
     : null;
-  const nextMatchweekEndsAt = (
-    nextFixture?.matchweek as { ends_at?: string | null } | undefined
-  )?.ends_at;
+  const nextMatchweek = nextFixture?.matchweek as
+    | { starts_at?: string | null; ends_at?: string | null }
+    | undefined;
+  const nextMatchweekEndsAt = nextMatchweek?.ends_at;
+  const matchweekLive = isMatchweekActive(
+    nextMatchweek?.starts_at,
+    nextMatchweek?.ends_at
+  );
 
   // Standings window: your row with two above and two below.
   const myIndex = teamId
@@ -132,8 +137,8 @@ export default async function DashboardPage() {
             Welcome back to {season.name}.
           </p>
         </div>
-        <StatusPill tone="live" pulse>
-          Season live
+        <StatusPill tone="live" pulse={matchweekLive}>
+          {matchweekLive ? "Matchweek live" : "Season live"}
         </StatusPill>
       </div>
 
