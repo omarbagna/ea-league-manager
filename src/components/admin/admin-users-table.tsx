@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -15,7 +15,71 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusPill } from "@/components/ui/status-pill";
 import { EmptyState } from "@/components/ui/empty-state";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+
+/** A button that opens a confirm dialog before running a consequential
+ * account action — used for the two directions here (Make admin, Ban)
+ * that grant privilege or lock someone out. The reverse directions (Make
+ * player, Unban) stay a single click since they only ever reduce access. */
+function ConfirmActionButton({
+  label,
+  icon: Icon,
+  variant,
+  title,
+  description,
+  confirmLabel,
+  busy,
+  onConfirm,
+}: {
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+  variant: "outline" | "destructive";
+  title: string;
+  description: string;
+  confirmLabel: string;
+  busy: boolean;
+  onConfirm: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant={variant} loading={busy} disabled={busy}>
+          <Icon className="size-4" />
+          {label}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="w-[min(96vw,28rem)]">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <p className="mt-2 text-sm text-on-surface-variant">{description}</p>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant={variant}
+            onClick={() => {
+              setOpen(false);
+              onConfirm();
+            }}
+          >
+            {confirmLabel}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 type UserRow = {
   id: string;
@@ -147,44 +211,56 @@ export function AdminUsersTable({
                 </div>
 
                 {!isSelf && (
-                  <div className="flex shrink-0 flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      loading={busy}
-                      disabled={busy}
-                      onClick={() =>
-                        run(u.id, () =>
-                          setUserRole(
-                            u.id,
-                            u.role === "admin" ? "player" : "admin"
-                          )
-                        )
-                      }
-                    >
-                      {u.role === "admin" ? (
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    {u.role === "admin" ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        loading={busy}
+                        disabled={busy}
+                        onClick={() => run(u.id, () => setUserRole(u.id, "player"))}
+                      >
                         <ShieldOff className="size-4" />
-                      ) : (
-                        <ShieldCheck className="size-4" />
-                      )}
-                      {u.role === "admin" ? "Make player" : "Make admin"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={u.is_banned ? "outline" : "destructive"}
-                      loading={busy}
-                      disabled={busy}
-                      onClick={() =>
-                        run(u.id, () => setUserBanned(u.id, !u.is_banned))
-                      }
-                    >
-                      {u.is_banned ? (
+                        Make player
+                      </Button>
+                    ) : (
+                      <ConfirmActionButton
+                        label="Make admin"
+                        icon={ShieldCheck}
+                        variant="outline"
+                        title={`Make ${u.email} an admin?`}
+                        description="They'll get full access to the admin console — seasons, fixtures, users, everything. Only grant this to someone you trust with the whole platform."
+                        confirmLabel="Make admin"
+                        busy={busy}
+                        onConfirm={() => run(u.id, () => setUserRole(u.id, "admin"))}
+                      />
+                    )}
+
+                    <span className="h-6 w-px bg-outline-variant/60" aria-hidden />
+
+                    {u.is_banned ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        loading={busy}
+                        disabled={busy}
+                        onClick={() => run(u.id, () => setUserBanned(u.id, false))}
+                      >
                         <UserRoundCheck className="size-4" />
-                      ) : (
-                        <UserRoundX className="size-4" />
-                      )}
-                      {u.is_banned ? "Unban" : "Ban"}
-                    </Button>
+                        Unban
+                      </Button>
+                    ) : (
+                      <ConfirmActionButton
+                        label="Ban"
+                        icon={UserRoundX}
+                        variant="destructive"
+                        title={`Ban ${u.email}?`}
+                        description="They'll be signed out and blocked from signing back in until you unban them. Their team, fixtures and history are untouched."
+                        confirmLabel="Ban"
+                        busy={busy}
+                        onConfirm={() => run(u.id, () => setUserBanned(u.id, true))}
+                      />
+                    )}
                   </div>
                 )}
               </li>
