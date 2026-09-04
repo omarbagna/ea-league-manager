@@ -38,8 +38,11 @@ export async function updateSession(request: NextRequest) {
     pathname === "/";
   const isOnboarding = pathname.startsWith("/onboarding");
   const isAdmin = pathname.startsWith("/admin");
+  // Public, read-only league snapshot — no account required, and no
+  // account-state redirect (onboarding, ban) should apply to it either.
+  const isPublicRoute = pathname.startsWith("/league");
 
-  if (!user && !isAuthRoute) {
+  if (!user && !isAuthRoute && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
@@ -57,7 +60,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && !isAuthRoute && !isOnboarding) {
+  if (user && !isAuthRoute && !isOnboarding && !isPublicRoute) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("onboarding_complete, role, is_banned")
