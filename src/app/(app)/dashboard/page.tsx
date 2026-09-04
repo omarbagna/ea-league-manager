@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Calendar, TrendingUp, BarChart3 } from "lucide-react";
+import { Calendar, TrendingUp, BarChart3, CalendarOff } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveSeason, getCurrentUserTeamId } from "@/lib/season";
 import { getStandings, getSeasonProgress } from "@/lib/standings";
@@ -24,13 +25,15 @@ export default async function DashboardPage() {
 
   if (!season || !user) {
     return (
-      <div className="mx-auto max-w-[1280px] py-12 text-center">
-        <h2 className="font-display text-2xl font-bold italic text-primary uppercase">
+      <div className="mx-auto max-w-[1280px]">
+        <h2 className="mb-2 font-display text-2xl font-bold tracking-tight text-primary md:text-3xl">
           Overview
         </h2>
-        <p className="mt-4 text-on-surface-variant">
-          No active season. Contact your league administrator.
-        </p>
+        <EmptyState
+          icon={CalendarOff}
+          title="No season is running"
+          description="Your dashboard lights up as soon as your league admin activates a season."
+        />
       </div>
     );
   }

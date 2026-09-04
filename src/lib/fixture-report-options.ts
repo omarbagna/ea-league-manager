@@ -27,11 +27,16 @@ export function fixtureToReportOption(
   };
 }
 
-export function formatFixtureReportLabel(option: FixtureReportOption): string {
+export function formatFixtureReportLabel(
+  option: FixtureReportOption,
+  { includeHint = true }: { includeHint?: boolean } = {}
+): string {
   const home = `${option.homeTeamName} (${formatEaId(option.homeEaId)})`;
   const away = `${option.awayTeamName} (${formatEaId(option.awayEaId)})`;
   const base = `${home} vs ${away}`;
-  return option.statusHint ? `${base} — ${option.statusHint}` : base;
+  return includeHint && option.statusHint
+    ? `${base} — ${option.statusHint}`
+    : base;
 }
 
 export function resolveFixturePickerValue(
