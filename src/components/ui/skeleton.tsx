@@ -65,6 +65,69 @@ export function CardBlockSkeleton({ className }: { className?: string }) {
   );
 }
 
+/** A titled block with N row placeholders — admin list/table pages
+ *  (seasons, reports, disputes, forfeits, teams, users). */
+export function AdminListSkeleton({
+  rows = 6,
+  rowClassName,
+}: {
+  rows?: number;
+  rowClassName?: string;
+}) {
+  return (
+    <div
+      className="overflow-hidden rounded-xl border border-outline-variant bg-card glow-effect"
+      role="status"
+      aria-label="Loading"
+    >
+      <div className="flex items-center gap-3 border-b border-outline-variant bg-surface-container-low px-4 py-3">
+        <Skeleton className="h-4 w-40" />
+      </div>
+      <div className="divide-y divide-outline-variant/50">
+        {Array.from({ length: rows }).map((_, i) => (
+          <div
+            key={i}
+            className={cn(
+              "flex items-center gap-3 px-4 py-3.5",
+              rowClassName
+            )}
+          >
+            <Skeleton className="size-8 shrink-0 rounded-full" />
+            <Skeleton className="h-4 w-40" />
+            <div className="ml-auto flex gap-2">
+              <Skeleton className="h-6 w-16 rounded-full" />
+              <Skeleton className="h-6 w-6 rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Admin overview: action queue + KPI tiles + quick actions + a two-up block. */
+export function AdminOverviewSkeleton() {
+  return (
+    <div className="space-y-8" role="status" aria-label="Loading">
+      <Skeleton className="h-20 w-full rounded-xl" />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-24 w-full rounded-xl" />
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-20 w-full rounded-lg" />
+        ))}
+      </div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Skeleton className="h-72 w-full rounded-xl lg:col-span-2" />
+        <Skeleton className="h-72 w-full rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
 /** Generic content skeleton for the (app) segment loading state. */
 export function AppContentSkeleton() {
   return (
