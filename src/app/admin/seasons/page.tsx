@@ -25,6 +25,7 @@ export default async function AdminSeasonsPage() {
       teamCount: number;
       matchweekCount: number;
       fixtureCount: number;
+      reportedFixtureCount: number;
       grouped: Awaited<ReturnType<typeof getFixturesForSeason>>;
     }
   > = {};
@@ -45,15 +46,17 @@ export default async function AdminSeasonsPage() {
             getFixturesForSeason(s.id, "all"),
           ]);
 
-        const fixtureCount = grouped.reduce(
-          (sum, g) => sum + g.fixtures.length,
-          0
-        );
+        const allFixtures = grouped.flatMap((g) => g.fixtures);
+        const fixtureCount = allFixtures.length;
+        const reportedFixtureCount = allFixtures.filter(
+          (f) => f.status === "completed"
+        ).length;
 
         seasonMeta[s.id] = {
           teamCount: teamCount ?? 0,
           matchweekCount: matchweekCount ?? 0,
           fixtureCount,
+          reportedFixtureCount,
           grouped,
         };
       })
