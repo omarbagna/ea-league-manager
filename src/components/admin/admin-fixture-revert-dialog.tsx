@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -79,10 +80,10 @@ export function AdminFixtureRevertDialog({
           )}
           aria-busy={pending}
         >
-          <p className="text-sm text-on-surface-variant">
+          <DialogDescription>
             {fixture.home_team.name} vs {fixture.away_team.name} — undo this
             result and reopen the fixture for a new submission.
-          </p>
+          </DialogDescription>
 
           <MatchScoreStatus
             homeTeamName={fixture.home_team.name}

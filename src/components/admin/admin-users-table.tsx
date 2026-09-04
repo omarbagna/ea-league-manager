@@ -18,6 +18,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -60,7 +61,7 @@ function ConfirmActionButton({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <p className="mt-2 text-sm text-on-surface-variant">{description}</p>
+        <DialogDescription className="mt-2">{description}</DialogDescription>
         <div className="mt-4 flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
             Cancel

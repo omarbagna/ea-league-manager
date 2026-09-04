@@ -88,6 +88,18 @@ function DialogTitle({
   );
 }
 
+function DialogDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Description>) {
+  return (
+    <DialogPrimitive.Description
+      className={cn("text-sm text-on-surface-variant", className)}
+      {...props}
+    />
+  );
+}
+
 export {
   Dialog,
   DialogTrigger,
@@ -97,4 +109,5 @@ export {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 };

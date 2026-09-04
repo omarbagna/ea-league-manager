@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -77,11 +78,11 @@ export function DisqualifyTeamDialog({
         </DialogHeader>
 
         <div className="space-y-4 text-sm text-on-surface-variant">
-          <p>
+          <DialogDescription>
             Remove <strong className="text-on-surface">{teamName}</strong> from{" "}
             <strong className="text-on-surface">{seasonName}</strong> for the rest of
             the season.
-          </p>
+          </DialogDescription>
           <ul className="list-disc space-y-1 pl-5">
             <li>Completed results before disqualification are kept.</li>
             <li>
