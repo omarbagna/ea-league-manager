@@ -9,6 +9,7 @@ import {
   Trophy,
   Gamepad2,
   Medal,
+  Activity,
   Plus,
   Settings,
   History,
@@ -38,6 +39,7 @@ const primaryNav = [
 
 const secondaryNav = [
   { href: "/leaderboards", label: "Leaderboards", icon: Medal },
+  { href: "/power-rankings", label: "Power Rankings", icon: Activity },
   { href: "/history", label: "History", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
@@ -48,6 +50,7 @@ const PAGE_TITLES: [string, string][] = [
   ["/standings", "Standings"],
   ["/matches/report", "Match Reporting"],
   ["/leaderboards", "Leaderboards"],
+  ["/power-rankings", "Power Rankings"],
   ["/history", "Hall of Fame"],
   ["/settings", "Settings"],
   ["/teams", "Team"],
