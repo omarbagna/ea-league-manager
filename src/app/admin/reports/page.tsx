@@ -1,18 +1,28 @@
+import { ClipboardCheck } from "lucide-react";
 import { getPendingSubmissionsForAdmin } from "@/lib/queries/submissions";
 import { SubmissionResolver } from "@/components/admin/submission-resolver";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default async function AdminReportsPage() {
   const items = await getPendingSubmissionsForAdmin();
 
   return (
-    <div className="space-y-8">
-      <h1 className="font-display text-2xl font-bold text-primary">Pending Match Reports</h1>
-      <p className="max-w-2xl text-sm text-on-surface-variant">
-        Review submitted scores when an opponent has not approved the result. Approving
-        finalizes the match and updates standings.
-      </p>
+    <div className="mx-auto max-w-[900px] space-y-6">
+      <div>
+        <h1 className="font-display text-3xl font-bold tracking-tight text-primary">
+          Pending reports
+        </h1>
+        <p className="mt-1 text-on-surface-variant">
+          Scores an opponent hasn&apos;t approved. Approving finalises the match
+          and updates standings.
+        </p>
+      </div>
       {items.length === 0 ? (
-        <p className="text-on-surface-variant">No pending match reports.</p>
+        <EmptyState
+          icon={ClipboardCheck}
+          title="Nothing waiting for review"
+          description="Reports show up here when an opponent doesn't approve a submitted score."
+        />
       ) : (
         <div className="space-y-6">
           {items.map((item) => (

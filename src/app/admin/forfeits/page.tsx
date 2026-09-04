@@ -1,18 +1,28 @@
+import { UserX } from "lucide-react";
 import { getPendingForfeitReportsForAdmin } from "@/lib/queries/forfeits";
 import { ForfeitResolver } from "@/components/admin/forfeit-resolver";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default async function AdminForfeitsPage() {
   const items = await getPendingForfeitReportsForAdmin();
 
   return (
-    <div className="space-y-8">
-      <h1 className="font-display text-2xl font-bold text-primary">No-Show Forfeits</h1>
-      <p className="max-w-2xl text-sm text-on-surface-variant">
-        Review evidence when a player reports their opponent did not show after the matchweek
-        ended. Approving records a 3–0 forfeit win and updates standings.
-      </p>
+    <div className="mx-auto max-w-[900px] space-y-6">
+      <div>
+        <h1 className="font-display text-3xl font-bold tracking-tight text-primary">
+          No-shows
+        </h1>
+        <p className="mt-1 text-on-surface-variant">
+          Evidence from a player whose opponent didn&apos;t show after the
+          matchweek closed. Approving records a 3–0 forfeit win.
+        </p>
+      </div>
       {items.length === 0 ? (
-        <p className="text-on-surface-variant">No pending no-show reports.</p>
+        <EmptyState
+          icon={UserX}
+          title="No no-show reports"
+          description="These arrive when a player reports an absent opponent once a matchweek has ended."
+        />
       ) : (
         <div className="space-y-6">
           {items.map((item) => (
