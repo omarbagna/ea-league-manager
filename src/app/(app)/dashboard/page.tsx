@@ -147,11 +147,13 @@ export default async function DashboardPage() {
           endsAt={nextMatchweekEndsAt}
           matchweekEnded={isMatchweekEnded(nextMatchweekEndsAt)}
           myTeam={{
+            id: myTeamEntity.id,
             name: myTeamEntity.name,
             crestSeed: myTeamEntity.crest_seed,
             crestUrl: myTeamEntity.crest_url,
           }}
           opponent={{
+            id: opponentEntity.id,
             name: opponentEntity.name,
             crestSeed: opponentEntity.crest_seed,
             crestUrl: opponentEntity.crest_url,

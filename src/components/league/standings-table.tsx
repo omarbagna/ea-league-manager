@@ -173,21 +173,26 @@ export function StandingsTable({
 
                 <td className="px-3 py-2.5">
                   <span className="inline-flex items-center gap-2.5">
-                    <TeamCrest
-                      name={row.team?.name ?? "—"}
-                      seed={row.team?.crest_seed}
-                      crestUrl={row.team?.crest_url}
-                      size="sm"
-                      className="size-7"
-                    />
-                    <span
-                      className={cn(
-                        "font-semibold",
-                        highlighted && "text-primary-fixed"
-                      )}
+                    <Link
+                      href={`/teams/${row.team_id}`}
+                      className="inline-flex items-center gap-2.5 hover:text-primary"
                     >
-                      {row.team?.name ?? "—"}
-                    </span>
+                      <TeamCrest
+                        name={row.team?.name ?? "—"}
+                        seed={row.team?.crest_seed}
+                        crestUrl={row.team?.crest_url}
+                        size="sm"
+                        className="size-7"
+                      />
+                      <span
+                        className={cn(
+                          "font-semibold",
+                          highlighted && "text-primary-fixed"
+                        )}
+                      >
+                        {row.team?.name ?? "—"}
+                      </span>
+                    </Link>
                     {row.team?.disqualified_at && (
                       <span className="rounded bg-error-container/30 px-1.5 py-0.5 font-data text-[10px] font-semibold uppercase text-error">
                         DQ
@@ -369,16 +374,21 @@ export function LeagueSpotlight({
                   <span className="w-3 font-data text-xs text-outline">
                     {i + 1}
                   </span>
-                  <TeamCrest
-                    name={row.team?.name ?? "—"}
-                    seed={row.team?.crest_seed}
-                    crestUrl={row.team?.crest_url}
-                    size="sm"
-                    className="size-6"
-                  />
-                  <span className="flex-1 truncate font-medium">
-                    {row.team?.name ?? "—"}
-                  </span>
+                  <Link
+                    href={`/teams/${row.team_id}`}
+                    className="flex min-w-0 flex-1 items-center gap-2.5 hover:text-primary"
+                  >
+                    <TeamCrest
+                      name={row.team?.name ?? "—"}
+                      seed={row.team?.crest_seed}
+                      crestUrl={row.team?.crest_url}
+                      size="sm"
+                      className="size-6"
+                    />
+                    <span className="truncate font-medium">
+                      {row.team?.name ?? "—"}
+                    </span>
+                  </Link>
                   <span className="font-data text-xs text-primary-fixed">
                     {value}
                   </span>
