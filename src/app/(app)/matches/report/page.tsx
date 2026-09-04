@@ -249,18 +249,12 @@ export default async function ReportMatchPage({
   return (
     <div className="mx-auto w-full max-w-[1280px] px-4 py-6 md:px-12">
       <div className="mb-6 border-b border-outline-variant/50 pb-4">
-        <div className="mb-1 flex items-center gap-2">
-          <span className="size-2 animate-pulse rounded-full bg-secondary-fixed shadow-[0_0_8px_#b7e12e]" />
-          <span className="font-data text-xs uppercase tracking-widest text-secondary-fixed">
-            Action Required
-          </span>
-        </div>
-        <h2 className="font-display text-2xl font-extrabold uppercase italic tracking-tighter text-primary md:text-3xl">
+        <h2 className="font-display text-2xl font-bold tracking-tight text-primary md:text-3xl">
           Match Reporting Hub
         </h2>
         <p className="mt-2 max-w-2xl text-on-surface-variant">
-          Ensure scores are entered correctly. Falsifying match results will result in an
-          immediate league ban.
+          Report your matchweek results, approve your opponent&apos;s
+          submissions, and raise a dispute if a score is wrong.
         </p>
       </div>
 
