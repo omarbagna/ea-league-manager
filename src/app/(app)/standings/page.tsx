@@ -76,25 +76,24 @@ export default async function StandingsPage() {
                 : ""}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <Link
-            href="/power-rankings"
-            className="font-data text-xs text-primary-fixed hover:underline"
-          >
-            Power rankings →
-          </Link>
-          <Link
-            href="/leaderboards"
-            className="font-data text-xs text-primary-fixed hover:underline"
-          >
-            Leaderboards →
-          </Link>
-          <Link
-            href="/history"
-            className="font-data text-xs text-primary-fixed hover:underline"
-          >
-            Past champions →
-          </Link>
+        {/* Plain underlined text here read as a continuation of the
+            subtitle above it once the two rows wrapped onto separate
+            lines on mobile. Pill chips (plus a divider while wrapped)
+            make this read as its own "related pages" strip instead. */}
+        <div className="flex flex-wrap gap-2 border-t border-outline-variant/60 pt-3 sm:border-t-0 sm:pt-0">
+          {[
+            { href: "/power-rankings", label: "Power rankings" },
+            { href: "/leaderboards", label: "Leaderboards" },
+            { href: "/history", label: "Past champions" },
+          ].map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className="rounded-full border border-outline-variant px-3 py-1 font-data text-xs text-primary-fixed transition-colors hover:border-primary hover:bg-primary-container/10"
+            >
+              {l.label} →
+            </Link>
+          ))}
         </div>
       </div>
 
