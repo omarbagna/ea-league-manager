@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -62,11 +63,11 @@ export function EndSeasonDialog({
         </DialogHeader>
 
         <div className="mt-2 space-y-3 text-sm text-on-surface-variant">
-          <p>
+          <DialogDescription>
             The current table becomes the final standings and {seasonName} moves
             to the Hall of Fame. There will be no active season until you
             activate another one.
-          </p>
+          </DialogDescription>
           <ul className="list-disc space-y-1 pl-5">
             <li>{reportedFixtures} of {totalFixtures} fixtures reported.</li>
             {unreported > 0 && (

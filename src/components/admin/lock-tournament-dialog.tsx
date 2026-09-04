@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -56,12 +57,12 @@ export function LockTournamentDialog({
           <DialogTitle>Generate the bracket?</DialogTitle>
         </DialogHeader>
         <div className="mt-2 space-y-3 text-sm text-on-surface-variant">
-          <p>
+          <DialogDescription>
             Signups close immediately and {entrantCount}{" "}
             {entrantCount === 1 ? "team is" : "teams are"} seeded into a
             bracket at random. This can&apos;t be undone — entrants can no
             longer be added or removed once it&apos;s generated.
-          </p>
+          </DialogDescription>
           {error && <WarningNote tone="critical">{error}</WarningNote>}
         </div>
         <div className="mt-4 flex justify-end gap-2">

@@ -4,6 +4,7 @@ import { ZoomIn } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -62,6 +63,11 @@ export function EvidenceImagePreview({
         <DialogContent className="w-[min(96vw,64rem)]">
           <DialogHeader>
             <DialogTitle>{label ?? alt}</DialogTitle>
+            {/* No visible caption needed beyond the title bar — this just
+                gives screen readers a description of what the dialog holds. */}
+            <DialogDescription className="sr-only">
+              Full-size view of {alt}
+            </DialogDescription>
           </DialogHeader>
           <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto rounded-lg bg-black/50 p-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}

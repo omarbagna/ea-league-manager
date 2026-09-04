@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -97,10 +98,10 @@ export function AdminFixtureForfeitDialog({
           )}
           aria-busy={pending}
         >
-          <p className="text-sm text-on-surface-variant">
+          <DialogDescription>
             {fixture.home_team.name} vs {fixture.away_team.name} — select the team
             that did not show. The match will be finalized as a 3–0 forfeit.
-          </p>
+          </DialogDescription>
 
           <fieldset className="space-y-2">
             <legend className="mb-2 font-data text-xs uppercase tracking-widest text-outline">

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -59,12 +60,12 @@ export function ForceDeleteTournamentDialog({
           <DialogTitle>Delete {tournamentName}?</DialogTitle>
         </DialogHeader>
         <div className="mt-2 space-y-3 text-sm text-on-surface-variant">
-          <p>
+          <DialogDescription>
             This tournament is {status === "completed" ? "completed" : "in progress"} —
             deleting it permanently removes every entrant, round and
             reported result. Unlike a draft tournament, this can&apos;t be
             undone.
-          </p>
+          </DialogDescription>
           {error && <WarningNote tone="critical">{error}</WarningNote>}
         </div>
         <div className="mt-4 flex justify-end gap-2">
