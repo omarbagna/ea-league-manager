@@ -9,6 +9,7 @@ import { MatchweekCountdown } from "@/components/league/matchweek-countdown";
 import type { MatchResult } from "@/lib/standings";
 
 type TeamLite = {
+  id: string;
   name: string;
   crestSeed: string | null;
   crestUrl: string | null;
@@ -51,7 +52,10 @@ export function ThisWeekBlock({
       </div>
 
       <div className="grid gap-6 p-5 md:grid-cols-[1fr_auto_1fr] md:items-center">
-        <div className="flex items-center gap-3">
+        <Link
+          href={`/teams/${myTeam.id}`}
+          className="flex items-center gap-3 hover:text-primary"
+        >
           <TeamCrest
             name={myTeam.name}
             seed={myTeam.crestSeed}
@@ -66,28 +70,31 @@ export function ThisWeekBlock({
               {myTeam.name}
             </p>
           </div>
-        </div>
+        </Link>
 
         <span className="hidden font-display text-sm italic text-outline-variant md:block">
           vs
         </span>
 
         <div className="flex items-center gap-3 md:justify-end md:text-right">
-          <div className="md:order-2">
+          <Link href={`/teams/${opponent.id}`} className="md:order-2">
             <TeamCrest
               name={opponent.name}
               seed={opponent.crestSeed}
               crestUrl={opponent.crestUrl}
               size="md"
             />
-          </div>
+          </Link>
           <div className="md:order-1">
             <span className="font-data text-[11px] uppercase tracking-wide text-outline">
               Opponent
             </span>
-            <p className="font-display text-lg font-bold leading-tight">
+            <Link
+              href={`/teams/${opponent.id}`}
+              className="block font-display text-lg font-bold leading-tight hover:text-primary"
+            >
               {opponent.name}
-            </p>
+            </Link>
             <div className="mt-1.5 flex items-center gap-2 md:justify-end">
               <FormRun form={opponentForm} />
             </div>
