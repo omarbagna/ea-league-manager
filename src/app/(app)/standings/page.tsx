@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Trophy } from "lucide-react";
 import { getActiveSeason, getCurrentUserTeamId } from "@/lib/season";
 import {
@@ -52,16 +53,24 @@ export default async function StandingsPage() {
 
   return (
     <div className="mx-auto max-w-[1280px]">
-      <div className="mb-6">
-        <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
-          League Standings
-        </h2>
-        <p className="mt-1 font-data text-sm text-on-surface-variant">
-          {season.name}
-          {anyPlayed && prevPositions.size > 0
-            ? " · movement shown vs. last matchweek"
-            : ""}
-        </p>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
+            League Standings
+          </h2>
+          <p className="mt-1 font-data text-sm text-on-surface-variant">
+            {season.name}
+            {anyPlayed && prevPositions.size > 0
+              ? " · movement shown vs. last matchweek"
+              : ""}
+          </p>
+        </div>
+        <Link
+          href="/history"
+          className="font-data text-xs text-primary-fixed hover:underline"
+        >
+          Past champions →
+        </Link>
       </div>
 
       {standings.length === 0 ? (
