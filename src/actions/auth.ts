@@ -146,6 +146,33 @@ export async function updatePassword(
   return redirectAfterAuth(user.id);
 }
 
+/** Change password from Settings — stays on the page instead of redirecting. */
+export async function changePassword(
+  _prev: AuthActionState,
+  formData: FormData
+): Promise<AuthActionState> {
+  const parsed = updatePasswordSchema.safeParse({
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0]?.message ?? "Invalid input" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Session expired. Sign in again." };
+
+  const { error } = await supabase.auth.updateUser({
+    password: parsed.data.password,
+  });
+  if (error) return { error: error.message };
+
+  return { success: "Password updated." };
+}
+
 export async function completeOnboarding(
   _prev: AuthActionState,
   formData: FormData

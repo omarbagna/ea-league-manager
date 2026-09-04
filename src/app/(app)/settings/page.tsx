@@ -1,6 +1,23 @@
 import { redirect } from "next/navigation";
+import { format } from "date-fns";
+import { ShieldCheck, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveSeason } from "@/lib/season";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusPill } from "@/components/ui/status-pill";
 import { ProfileSettingsForm } from "@/components/settings/profile-settings-form";
+import { ChangePasswordForm } from "@/components/settings/change-password-form";
+
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-outline-variant/50 py-2.5 last:border-0">
+      <span className="font-data text-xs uppercase tracking-wide text-outline">
+        {label}
+      </span>
+      <span className="text-sm text-on-surface">{value}</span>
+    </div>
+  );
+}
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -12,27 +29,78 @@ export default async function SettingsPage() {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("team_name, ea_id")
-    .eq("id", user.id)
-    .single();
+  const [{ data: profile }, season] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("team_name, ea_id, role, created_at")
+      .eq("id", user.id)
+      .single(),
+    getActiveSeason(),
+  ]);
+
+  const joined = profile?.created_at
+    ? format(new Date(profile.created_at), "d MMM yyyy")
+    : "—";
 
   return (
-    <div className="mx-auto max-w-[1024px]">
-      <header className="mb-8">
-        <h1 className="font-display text-3xl font-extrabold uppercase italic tracking-tight text-secondary-fixed">
+    <div className="mx-auto max-w-[720px] space-y-6">
+      <div>
+        <h1 className="font-display text-3xl font-bold tracking-tight text-primary">
           Settings
         </h1>
-        <p className="mt-2 text-sm text-on-surface-variant">
-          Update your team name and EA ID shown across fixtures and standings.
+        <p className="mt-1 text-on-surface-variant">
+          Your team identity, account, and password.
         </p>
-      </header>
+      </div>
 
-      <ProfileSettingsForm
-        defaultTeamName={profile?.team_name ?? ""}
-        defaultEaId={profile?.ea_id ?? ""}
-      />
+      <Card variant="raised">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <User className="size-4 text-primary-fixed" />
+            Team identity
+          </CardTitle>
+          <p className="text-sm text-on-surface-variant">
+            Shown across fixtures, standings and reporting
+            {season ? ` — including ${season.name}` : ""}.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <ProfileSettingsForm
+            defaultTeamName={profile?.team_name ?? ""}
+            defaultEaId={profile?.ea_id ?? ""}
+          />
+        </CardContent>
+      </Card>
+
+      <Card variant="raised">
+        <CardHeader>
+          <CardTitle className="text-base">Account</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-1">
+          <Row label="Email" value={user.email} />
+          <Row
+            label="Role"
+            value={
+              <StatusPill
+                tone={profile?.role === "admin" ? "info" : "neutral"}
+                icon={profile?.role === "admin" ? ShieldCheck : null}
+              >
+                {profile?.role ?? "player"}
+              </StatusPill>
+            }
+          />
+          <Row label="Joined" value={joined} />
+        </CardContent>
+      </Card>
+
+      <Card variant="raised">
+        <CardHeader>
+          <CardTitle className="text-base">Password</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ChangePasswordForm />
+        </CardContent>
+      </Card>
     </div>
   );
 }
