@@ -40,10 +40,13 @@ export function AdminFixturesTable({
   groups,
   teams,
   revertableByFixtureId,
+  seasonStatus,
 }: {
   groups: Group[];
   teams: Team[];
   revertableByFixtureId: Map<string, RevertableSubmission>;
+  /** admin actions (forfeit/revert) are read-only outside an active season */
+  seasonStatus?: string;
 }) {
   const currentMwId = useMemo(() => {
     const active = groups.find((g) =>
@@ -166,7 +169,11 @@ export function AdminFixturesTable({
                       <StatusPill tone={pill.tone}>{pill.label}</StatusPill>
                     </td>
                     <td className="px-3 py-2.5 text-right">
-                      {f.status !== "completed" ? (
+                      {seasonStatus && seasonStatus !== "active" ? (
+                        <span className="font-data text-xs text-outline">
+                          —
+                        </span>
+                      ) : f.status !== "completed" ? (
                         <AdminFixtureForfeitDialog fixture={f} />
                       ) : revertable && !isForfeit ? (
                         <AdminFixtureRevertDialog

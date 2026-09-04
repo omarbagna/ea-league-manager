@@ -28,8 +28,18 @@ export default async function AdminFixturesPage({
   }
 
   const activeSeason = seasons.find((s) => s.status === "active");
+  const lastCompleted = seasons
+    .filter((s) => s.status === "completed")
+    .sort(
+      (a, b) =>
+        new Date(b.ends_at ?? b.created_at).getTime() -
+        new Date(a.ends_at ?? a.created_at).getTime()
+    )[0];
   const selectedSeason =
-    seasons.find((s) => s.id === seasonParam) ?? activeSeason ?? seasons[0];
+    seasons.find((s) => s.id === seasonParam) ??
+    activeSeason ??
+    lastCompleted ??
+    seasons[0];
 
   const { data: matchweeks } = await supabase
     .from("matchweeks")

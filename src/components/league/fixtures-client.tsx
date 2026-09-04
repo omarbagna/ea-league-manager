@@ -9,6 +9,7 @@ import {
   useMatchweekExpansion,
 } from "@/components/league/matchweek-fixtures-group";
 import { EmptyState } from "@/components/ui/empty-state";
+import { StatusPill } from "@/components/ui/status-pill";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { FixtureWithTeams } from "@/types/database";
 
@@ -36,12 +37,15 @@ export function FixturesClient({
   userTeamId,
   userProfileId,
   defaultExpandedMatchweekId,
+  isArchived,
 }: {
   grouped: Group[];
   seasonName: string;
   userTeamId?: string | null;
   userProfileId?: string;
   defaultExpandedMatchweekId?: string | null;
+  /** a completed season shown read-only because no season is currently active */
+  isArchived?: boolean;
 }) {
   const [scope, setScope] = useState<ScopeFilter>("league");
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -90,12 +94,19 @@ export function FixturesClient({
     <>
       <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
-            Fixtures
-          </h2>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
+              Fixtures
+            </h2>
+            {isArchived && <StatusPill tone="neutral">Final</StatusPill>}
+          </div>
           <p className="mt-1 font-data text-sm text-on-surface-variant">
             {seasonName}
-            {currentMw ? ` · Matchweek ${currentMw.number} in play` : ""}
+            {isArchived
+              ? " · season complete — no season is active"
+              : currentMw
+                ? ` · Matchweek ${currentMw.number} in play`
+                : ""}
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -165,7 +176,9 @@ export function FixturesClient({
                       key={fixture.id}
                       fixture={fixture}
                       matchweek={matchweek}
-                      linkToReport={fixture.status !== "completed" && mine}
+                      linkToReport={
+                        !isArchived && fixture.status !== "completed" && mine
+                      }
                       matchCentreHref={`/fixtures/${fixture.id}`}
                       highlightTeamId={highlightTeamId}
                       userProfileId={userProfileId}

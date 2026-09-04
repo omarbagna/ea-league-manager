@@ -29,6 +29,31 @@ export async function getActiveSeason(): Promise<Season | null> {
   return data;
 }
 
+export type DisplaySeason = { season: Season; isArchived: boolean };
+
+/**
+ * The season pages should show right now: the active one, or — when
+ * there isn't one — the most recently completed season, read-only, so
+ * the app doesn't go blank the moment a season ends. Only `null` when
+ * no season has ever run.
+ */
+export async function getDisplaySeason(): Promise<DisplaySeason | null> {
+  const active = await getActiveSeason();
+  if (active) return { season: active, isArchived: false };
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("seasons")
+    .select("*")
+    .eq("status", "completed")
+    .order("ends_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return data ? { season: data, isArchived: true } : null;
+}
+
 export async function getCurrentUserTeamId(
   userId: string,
   seasonId: string

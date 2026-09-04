@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { Medal } from "lucide-react";
-import { getActiveSeason, getCurrentUserTeamId } from "@/lib/season";
+import { getDisplaySeason, getCurrentUserTeamId } from "@/lib/season";
 import { getSeasonLeaderboards } from "@/lib/queries/leaderboards";
 import type { LeaderBoard, LeaderRow } from "@/lib/queries/leaderboards";
 import { createClient } from "@/lib/supabase/server";
 import { TeamCrest } from "@/components/league/team-crest";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { StatusPill } from "@/components/ui/status-pill";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -82,9 +83,9 @@ function BoardCard({ board }: { board: LeaderBoard }) {
 }
 
 export default async function LeaderboardsPage() {
-  const season = await getActiveSeason();
+  const display = await getDisplaySeason();
 
-  if (!season) {
+  if (!display) {
     return (
       <div className="mx-auto max-w-[1100px]">
         <h2 className="mb-2 font-display text-3xl font-bold tracking-tight text-primary">
@@ -99,6 +100,8 @@ export default async function LeaderboardsPage() {
     );
   }
 
+  const { season, isArchived } = display;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -112,11 +115,15 @@ export default async function LeaderboardsPage() {
   return (
     <div className="mx-auto max-w-[1100px]">
       <div className="mb-6">
-        <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
-          Leaderboards
-        </h2>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
+            Leaderboards
+          </h2>
+          {isArchived && <StatusPill tone="neutral">Final</StatusPill>}
+        </div>
         <p className="mt-1 font-data text-sm text-on-surface-variant">
           {season.name}
+          {isArchived ? " · season complete" : ""}
           {data && data.playedFixtures > 0
             ? ` · ${data.playedFixtures} ${
                 data.playedFixtures === 1 ? "match" : "matches"

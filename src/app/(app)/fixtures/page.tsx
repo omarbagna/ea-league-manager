@@ -1,15 +1,15 @@
 import { CalendarOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getActiveSeason, getCurrentUserTeamId } from "@/lib/season";
+import { getDisplaySeason, getCurrentUserTeamId } from "@/lib/season";
 import { getFixturesForSeason } from "@/lib/queries/fixtures";
 import { getActiveMatchweek } from "@/lib/matchweek";
 import { FixturesClient } from "@/components/league/fixtures-client";
 import { EmptyState } from "@/components/ui/empty-state";
 
 export default async function FixturesPage() {
-  const season = await getActiveSeason();
+  const display = await getDisplaySeason();
 
-  if (!season) {
+  if (!display) {
     return (
       <div className="mx-auto max-w-[1024px]">
         <EmptyState
@@ -21,6 +21,8 @@ export default async function FixturesPage() {
     );
   }
 
+  const { season, isArchived } = display;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -31,7 +33,9 @@ export default async function FixturesPage() {
 
   const [grouped, activeMatchweek] = await Promise.all([
     getFixturesForSeason(season.id, "all"),
-    getActiveMatchweek(season.id, userTeamId),
+    isArchived
+      ? Promise.resolve(null)
+      : getActiveMatchweek(season.id, userTeamId),
   ]);
 
   return (
@@ -42,6 +46,7 @@ export default async function FixturesPage() {
         userTeamId={userTeamId}
         userProfileId={user?.id}
         defaultExpandedMatchweekId={activeMatchweek?.id}
+        isArchived={isArchived}
       />
     </div>
   );
