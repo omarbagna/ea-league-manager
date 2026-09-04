@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getTournamentDetail } from "@/lib/queries/tournaments";
 import { StatusPill } from "@/components/ui/status-pill";
 import { TournamentEntrantsPanel } from "@/components/admin/tournament-entrants-panel";
-import { TournamentBracketAdmin } from "@/components/admin/tournament-bracket-admin";
+import { TournamentBracket } from "@/components/league/tournament-bracket";
 
 const STATUS_TONE = {
   draft: "info",
@@ -74,7 +74,7 @@ export default async function AdminTournamentDetailPage({
           eligibleProfiles={eligibleProfiles}
         />
       ) : (
-        <TournamentBracketAdmin tournament={tournament} />
+        <TournamentBracket tournament={tournament} canReport />
       )}
     </div>
   );

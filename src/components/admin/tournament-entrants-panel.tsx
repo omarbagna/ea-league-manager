@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { UserMinus, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Trash2, UserMinus, Users } from "lucide-react";
 import {
   addEntrantManually,
+  deleteTournament,
   removeEntrant,
 } from "@/actions/tournaments";
 import type { TournamentEntrant } from "@/lib/queries/tournaments";
@@ -22,6 +24,7 @@ export function TournamentEntrantsPanel({
   entrants: TournamentEntrant[];
   eligibleProfiles: { id: string; teamName: string; eaId: string | null }[];
 }) {
+  const router = useRouter();
   const [selectedProfile, setSelectedProfile] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +47,15 @@ export function TournamentEntrantsPanel({
     });
   };
 
+  const handleDelete = () => {
+    setError(null);
+    startTransition(async () => {
+      const result = await deleteTournament(tournamentId);
+      if (result.error) setError(result.error);
+      else router.push("/admin/tournaments");
+    });
+  };
+
   return (
     <div className="space-y-6">
       <Card variant="raised">
@@ -52,10 +64,22 @@ export function TournamentEntrantsPanel({
             <Users className="size-4" />
             Entrants
           </CardTitle>
-          <LockTournamentDialog
-            tournamentId={tournamentId}
-            entrantCount={entrants.length}
-          />
+          <div className="flex items-center gap-2">
+            <LockTournamentDialog
+              tournamentId={tournamentId}
+              entrantCount={entrants.length}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={pending}
+              onClick={handleDelete}
+              aria-label="Delete tournament"
+            >
+              <Trash2 className="size-4 text-error" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4 pt-0">
           {error && <WarningNote tone="critical">{error}</WarningNote>}

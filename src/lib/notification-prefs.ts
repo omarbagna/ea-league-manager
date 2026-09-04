@@ -2,6 +2,7 @@ export type NotificationCategory =
   | "deadlines"
   | "results"
   | "disputes"
+  | "tournaments"
   | "admin";
 
 export const NOTIFICATION_CATEGORIES: {
@@ -25,6 +26,11 @@ export const NOTIFICATION_CATEGORIES: {
     description: "When a result you're involved in is disputed or resolved.",
   },
   {
+    key: "tournaments",
+    label: "Tournaments",
+    description: "Bracket updates for knockout tournaments you've opted into — matchups, results, and eliminations.",
+  },
+  {
     key: "admin",
     label: "Admin queue",
     description: "For admins — disputes and no-show reports that need a decision.",
@@ -45,6 +51,10 @@ const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   forfeit_review_required: "admin",
   forfeit_admin: "admin",
   dispute_review_required: "admin",
+  tournament_bracket_ready: "tournaments",
+  tournament_advanced: "tournaments",
+  tournament_eliminated: "tournaments",
+  tournament_champion: "tournaments",
 };
 
 export function categoryForType(type: string): NotificationCategory {
