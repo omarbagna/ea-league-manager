@@ -33,7 +33,7 @@ function TeamSide({
         className="size-9"
       />
       <div className="min-w-0">
-        <span className="font-data text-[10px] uppercase tracking-wide text-outline">
+        <span className="font-data text-[11px] uppercase tracking-wide text-outline">
           {label}
         </span>
         <p className="truncate font-display text-sm font-bold">{team.name}</p>

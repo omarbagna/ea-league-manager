@@ -29,13 +29,19 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 
 function ResultLetter({ r }: { r: "W" | "D" | "L" | null }) {
   if (!r) return <span className="font-data text-xs text-outline">—</span>;
+  const label = r === "W" ? "Win" : r === "D" ? "Draw" : "Loss";
   return (
     <span
+      title={label}
+      aria-label={label}
       className={cn(
-        "flex size-5 items-center justify-center rounded border font-data text-[10px] font-bold",
-        r === "W" && "border-secondary-fixed/40 bg-secondary-fixed/15 text-secondary-fixed",
-        r === "D" && "border-outline-variant bg-surface-container-highest text-on-surface-variant",
-        r === "L" && "border-error/40 bg-error/10 text-error"
+        "flex size-5 items-center justify-center border font-data text-[10px] font-bold",
+        r === "W" &&
+          "rounded-full border-secondary-fixed/50 bg-secondary-fixed/20 text-secondary-fixed",
+        r === "D" &&
+          "rounded-[3px] border-outline-variant bg-surface-container-highest text-on-surface-variant",
+        r === "L" &&
+          "rounded-md border-dashed border-error/60 bg-error/10 text-error"
       )}
     >
       {r}
@@ -50,7 +56,7 @@ function FixtureRow({ f }: { f: TeamFixtureVM }) {
       <span className="w-6 shrink-0 font-data text-xs text-outline">
         MW{f.matchweekNumber}
       </span>
-      <span className="w-8 shrink-0 font-data text-[10px] uppercase text-outline">
+      <span className="w-8 shrink-0 font-data text-[11px] uppercase text-outline">
         {f.isHome ? "H" : "A"}
       </span>
       <Link
@@ -72,7 +78,7 @@ function FixtureRow({ f }: { f: TeamFixtureVM }) {
             {f.teamScore}–{f.oppScore}
           </span>
           {f.forfeited && (
-            <span className="font-data text-[10px] uppercase text-warn">ff</span>
+            <span className="font-data text-[11px] uppercase text-warn">ff</span>
           )}
           <ResultLetter r={f.result} />
         </span>

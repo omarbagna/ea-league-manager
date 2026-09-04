@@ -165,7 +165,7 @@ export function ScreenshotUpload({
               ? "Upload evidence screenshot (optional)"
               : "Upload Match Result Screenshot"}
           </p>
-          <p className="font-data mt-1 text-[10px] text-outline">JPEG, PNG up to 5MB</p>
+          <p className="font-data mt-1 text-[11px] text-outline">JPEG, PNG up to 5MB</p>
         </div>
       )}
       {error && <p className="text-sm text-error">{error}</p>}
