@@ -6,42 +6,10 @@ import { purgeSubmissionScreenshot } from "@/lib/purge-submission-screenshot";
 import { scoreSubmissionSchema, disputeSchema } from "@/lib/validations/matches";
 import { forfeitReportSchema } from "@/lib/validations/forfeits";
 import { getForfeitEligibility } from "@/lib/queries/forfeits";
+import { notifyUser, notifyAdmins } from "@/lib/notify";
 
 export type MatchActionState = { error?: string; success?: string };
 
-async function notifyUser(
-  userId: string,
-  type: string,
-  title: string,
-  body: string,
-  payload: Record<string, unknown> = {}
-) {
-  const supabase = await createServiceClient();
-  await supabase.from("notifications").insert({
-    user_id: userId,
-    type,
-    title,
-    body,
-    payload,
-  });
-}
-
-async function notifyAdmins(
-  type: string,
-  title: string,
-  body: string,
-  payload: Record<string, unknown> = {}
-) {
-  const supabase = await createServiceClient();
-  const { data: admins } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("role", "admin");
-
-  for (const admin of admins ?? []) {
-    await notifyUser(admin.id, type, title, body, payload);
-  }
-}
 
 export async function submitMatchScore(
   _prev: MatchActionState,

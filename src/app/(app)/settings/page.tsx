@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
 import { ProfileSettingsForm } from "@/components/settings/profile-settings-form";
 import { ChangePasswordForm } from "@/components/settings/change-password-form";
+import { NotificationSettings } from "@/components/settings/notification-settings";
+import type { NotificationCategory } from "@/lib/notification-prefs";
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -37,6 +39,15 @@ export default async function SettingsPage() {
       .single(),
     getActiveSeason(),
   ]);
+
+  // Tolerate migration 021 not being applied yet.
+  const { data: prefRow } = await supabase
+    .from("profiles")
+    .select("notification_prefs")
+    .eq("id", user.id)
+    .maybeSingle();
+  const notificationPrefs = ((prefRow as { notification_prefs?: unknown })
+    ?.notification_prefs ?? {}) as Partial<Record<NotificationCategory, boolean>>;
 
   const joined = profile?.created_at
     ? format(new Date(profile.created_at), "d MMM yyyy")
@@ -90,6 +101,19 @@ export default async function SettingsPage() {
             }
           />
           <Row label="Joined" value={joined} />
+        </CardContent>
+      </Card>
+
+      <Card variant="raised">
+        <CardHeader>
+          <CardTitle className="text-base">Notifications</CardTitle>
+          <p className="text-sm text-on-surface-variant">
+            Choose what you&apos;re notified about, and turn on push for this
+            device.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <NotificationSettings initialPrefs={notificationPrefs} />
         </CardContent>
       </Card>
 
