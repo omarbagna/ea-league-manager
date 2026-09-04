@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -9,7 +10,15 @@ import { markNotificationRead, markAllNotificationsRead } from "@/actions/notifi
 import type { Notification } from "@/types/database";
 import { cn } from "@/lib/utils";
 
+function notificationHref(n: Notification): string | null {
+  const fixtureId = (n.payload as { fixture_id?: unknown })?.fixture_id;
+  return typeof fixtureId === "string"
+    ? `/matches/report?fixtureId=${fixtureId}`
+    : null;
+}
+
 export function NotificationsBell() {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -57,6 +66,15 @@ export function NotificationsBell() {
     });
   };
 
+  const handleClick = (n: Notification) => {
+    const href = notificationHref(n);
+    handleRead(n.id);
+    if (href) {
+      setOpen(false);
+      router.push(href);
+    }
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -101,22 +119,30 @@ export function NotificationsBell() {
           <p className="py-4 text-center text-sm text-on-surface-variant">No notifications</p>
         ) : (
           <ul className="space-y-2">
-            {notifications.map((n) => (
-              <li
-                key={n.id}
-                className={cn(
-                  "cursor-pointer rounded-lg border border-outline-variant/50 p-2 text-sm transition-colors hover:bg-surface-container-high",
-                  !n.read_at && "border-primary-container/30 bg-primary-container/5",
-                  pending && "pointer-events-none opacity-60"
-                )}
-                onClick={() => handleRead(n.id)}
-              >
-                <p className="font-medium text-on-surface">{n.title}</p>
-                {n.body && (
-                  <p className="mt-0.5 text-xs text-on-surface-variant">{n.body}</p>
-                )}
-              </li>
-            ))}
+            {notifications.map((n) => {
+              const href = notificationHref(n);
+              return (
+                <li
+                  key={n.id}
+                  className={cn(
+                    "cursor-pointer rounded-lg border border-outline-variant/50 p-2 text-sm transition-colors hover:bg-surface-container-high",
+                    !n.read_at && "border-primary-container/30 bg-primary-container/5",
+                    pending && "pointer-events-none opacity-60"
+                  )}
+                  onClick={() => handleClick(n)}
+                >
+                  <p className="font-medium text-on-surface">{n.title}</p>
+                  {n.body && (
+                    <p className="mt-0.5 text-xs text-on-surface-variant">{n.body}</p>
+                  )}
+                  {href && (
+                    <p className="mt-1 font-data text-[11px] text-primary-fixed">
+                      Report now →
+                    </p>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </PopoverContent>
