@@ -207,6 +207,73 @@ export function SeasonsList({
                 />
                 {expanded ? "Hide details" : "Manage"}
               </button>
+                <div>
+                  <span className="inline-flex items-center gap-2">
+                    <span className="font-semibold">{s.name}</span>
+                    <StatusPill
+                      tone={STATUS_TONE[s.status]}
+                      pulse={s.status === "active"}
+                    >
+                      {s.status}
+                    </StatusPill>
+                  </span>
+                  <p className="font-data text-xs text-on-surface-variant">
+                    {meta.fixtureCount} fixtures · {meta.matchweekCount} matchweeks
+                    · {meta.teamCount} teams
+                  </p>
+                </div>
+              </button>
+              <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+                <Link
+                  href={`/admin/standings?season=${s.id}`}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Standings
+                </Link>
+                <Link
+                  href={`/admin/fixtures?season=${s.id}`}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Fixtures
+                </Link>
+                {s.status === "completed" && (
+                  <Link
+                    href={`/history/${s.id}`}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Hall of Fame
+                  </Link>
+                )}
+                {s.status === "active" && (
+                  <EndSeasonDialog
+                    seasonName={s.name}
+                    seasonId={s.id}
+                    totalFixtures={meta.fixtureCount}
+                    reportedFixtures={meta.reportedFixtureCount}
+                  />
+                )}
+                {s.status !== "active" && (
+                  <Button
+                    size="sm"
+                    variant={s.status === "completed" ? "outline" : "default"}
+                    loading={isActivating}
+                    disabled={!!pendingAction}
+                    onClick={() => {
+                      setPendingAction(activateKey);
+                      startTransition(async () => {
+                        await activateSeason(s.id);
+                        window.location.reload();
+                      });
+                    }}
+                  >
+                    {isActivating
+                      ? "Activating…"
+                      : s.status === "completed"
+                        ? "Reopen"
+                        : "Set Active"}
+                  </Button>
+                )}
+              </div>
             </div>
 
             {expanded && (
