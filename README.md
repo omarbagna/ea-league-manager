@@ -83,11 +83,11 @@ SELECT jobid, jobname, schedule, command FROM cron.job WHERE jobname = 'purge-ma
 
 ### Step 4 — Enable Supabase extensions and auth
 
-**pg_cron** (required for 24h screenshot cleanup):
+**pg_cron** (screenshot cleanup, notification purge, and deadline reminders):
 
 1. Dashboard → **Database → Extensions**
 2. Search for `pg_cron` and enable it
-3. If you used Option B for migrations, run `004_purge_match_evidence.sql` again after enabling pg_cron
+3. If you used Option B for migrations, re-run `004_purge_match_evidence.sql`, `018_purge_notifications.sql`, and `020_deadline_reminders.sql` after enabling pg_cron
 
 **Email / password auth:**
 
@@ -162,6 +162,17 @@ In the browser (as admin):
 
 Match evidence in the `match-evidence` bucket is **deleted after 24 hours**. The `purge_match_evidence` job (pg_cron, hourly) removes files and sets `screenshot_path` to `purged`. Opponents should approve or dispute within that window.
 
+### Deadline reminders
+
+The `enqueue_deadline_reminders` job (pg_cron, every 4 hours, migration `020`)
+notifies both players of any unreported fixture when its matchweek closes
+**tomorrow** and again on the **closing day**. `reminder_log` dedupes so each
+player gets each reminder once. Trigger manually to test:
+
+```sql
+SELECT enqueue_deadline_reminders();
+```
+
 **Manual purge (testing):**
 
 ```sql
@@ -189,7 +200,7 @@ npx vercel --prod
 - [ ] Supabase Email provider: password on, magic link off
 - [ ] Migrations applied on production database (`supabase db push` or SQL Editor)
 - [ ] `match-evidence` bucket exists (migration `002`)
-- [ ] pg_cron enabled; job `purge-match-evidence` scheduled
+- [ ] pg_cron enabled; jobs `purge-match-evidence`, `purge-notifications`, `deadline-reminders` scheduled
 - [ ] Realtime enabled for `standings`, `match_submissions`, `notifications`
 
 ## Project structure
