@@ -1,3 +1,4 @@
+import { Trophy } from "lucide-react";
 import { getActiveSeason, getCurrentUserTeamId } from "@/lib/season";
 import {
   getStandings,
@@ -9,6 +10,7 @@ import {
   StandingsTable,
   LeagueSpotlight,
 } from "@/components/league/standings-table";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default async function StandingsPage() {
   const season = await getActiveSeason();
@@ -19,14 +21,15 @@ export default async function StandingsPage() {
 
   if (!season) {
     return (
-      <div className="mx-auto max-w-[1280px] py-16 text-center">
-        <h2 className="font-display text-2xl font-bold tracking-tight text-primary">
+      <div className="mx-auto max-w-[1280px]">
+        <h2 className="mb-2 font-display text-3xl font-bold tracking-tight text-primary">
           League Standings
         </h2>
-        <p className="mt-3 text-on-surface-variant">
-          No season is active right now. The table appears here once your league
-          admin starts one.
-        </p>
+        <EmptyState
+          icon={Trophy}
+          title="No season is running"
+          description="The league table appears here once your admin activates a season."
+        />
       </div>
     );
   }
@@ -62,14 +65,11 @@ export default async function StandingsPage() {
       </div>
 
       {standings.length === 0 ? (
-        <section className="rounded-xl border border-outline-variant bg-card p-10 text-center glow-effect">
-          <p className="text-on-surface-variant">
-            No teams are enrolled in {season.name} yet.
-          </p>
-          <p className="mt-2 text-sm text-outline">
-            Once fixtures are played, the table fills in automatically.
-          </p>
-        </section>
+        <EmptyState
+          icon={Trophy}
+          title={`No teams in ${season.name} yet`}
+          description="The table fills in automatically once teams are enrolled and fixtures are played."
+        />
       ) : (
         <div className="space-y-6">
           <section className="overflow-hidden rounded-xl border border-outline-variant bg-card glow-effect">

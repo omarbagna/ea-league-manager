@@ -9,6 +9,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import {
+  StatusPill,
+  REPORT_STATUS_TONE,
+} from "@/components/ui/status-pill";
 import { formatWeekendRange } from "@/lib/format-weekend";
 import {
   formatFixtureReportLabel,
@@ -42,12 +46,21 @@ export function FixtureReportPicker({
     const fixture = fixtures[0];
     return (
       <section className="mb-6 rounded-xl border border-outline-variant/50 bg-surface-container-low p-4">
-        <p className="font-data text-xs uppercase tracking-widest text-primary">
-          Matchweek {matchweek.number}
-          {weekend ? ` · ${weekend}` : ""}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="font-data text-xs uppercase tracking-widest text-primary">
+            Matchweek {matchweek.number}
+            {weekend ? ` · ${weekend}` : ""}
+          </p>
+          {fixture.statusHint && (
+            <StatusPill
+              tone={REPORT_STATUS_TONE[fixture.statusHint] ?? "neutral"}
+            >
+              {fixture.statusHint}
+            </StatusPill>
+          )}
+        </div>
         <p className="mt-1 font-display text-lg font-semibold text-on-surface">
-          {formatFixtureReportLabel(fixture)}
+          {formatFixtureReportLabel(fixture, { includeHint: false })}
         </p>
       </section>
     );

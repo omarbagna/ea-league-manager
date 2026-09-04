@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ClipboardList, Inbox } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveSeason, getCurrentUserTeamId } from "@/lib/season";
 import {
@@ -27,6 +28,7 @@ import {
   FixtureReportPicker,
 } from "@/components/matches/fixture-report-picker";
 import { fixtureToReportOption } from "@/lib/fixture-report-options";
+import { EmptyState } from "@/components/ui/empty-state";
 
 async function getFixtureStatusHints(
   fixtureIds: string[],
@@ -76,8 +78,12 @@ export default async function ReportMatchPage({
   const season = await getActiveSeason();
   if (!season || !user) {
     return (
-      <div className="mx-auto max-w-[1280px] py-12 text-center text-on-surface-variant">
-        Unable to load reporting hub.
+      <div className="mx-auto max-w-[1280px]">
+        <EmptyState
+          icon={ClipboardList}
+          title="Nothing to report yet"
+          description="The reporting hub opens when a season is active and you have a fixture to play."
+        />
       </div>
     );
   }
@@ -333,19 +339,31 @@ export default async function ReportMatchPage({
         )}
 
         {!hasReportingContent && (
-          <section className="rounded-xl border border-outline-variant bg-card p-8 text-center">
-            <p className="text-on-surface-variant">
-              {activeMatchweek && pickerFixtures.length > 0
-                ? "Choose a matchweek fixture above to report a score, or wait for an opponent submission."
-                : "No fixtures in the current matchweek to report."}
-            </p>
-            <p className="mt-3 text-sm text-on-surface-variant">
-              Report an older fixture from{" "}
-              <Link href="/fixtures" className="text-primary hover:underline">
-                Fixtures
-              </Link>
-              .
-            </p>
+          <section className="rounded-xl border border-outline-variant bg-card p-4 xl:col-span-2">
+            <EmptyState
+              icon={Inbox}
+              compact
+              title={
+                activeMatchweek && pickerFixtures.length > 0
+                  ? "Pick a fixture to report"
+                  : "No fixtures to report this matchweek"
+              }
+              description={
+                <>
+                  {activeMatchweek && pickerFixtures.length > 0
+                    ? "Choose a matchweek fixture above, or wait for your opponent to submit."
+                    : "Need an older result? "}
+                  {!(activeMatchweek && pickerFixtures.length > 0) && (
+                    <Link
+                      href="/fixtures"
+                      className="text-primary hover:underline"
+                    >
+                      Open Fixtures
+                    </Link>
+                  )}
+                </>
+              }
+            />
           </section>
         )}
       </div>
