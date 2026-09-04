@@ -7,7 +7,8 @@ import { EvidenceImagePreview } from "@/components/matches/evidence-image-previe
 import { MatchScoreStatus } from "@/components/matches/match-score-status";
 import { ScoreStepper } from "@/components/matches/score-stepper";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { WarningNote } from "@/components/ui/warning-note";
+import { ResolverCard } from "@/components/admin/resolver-card";
 
 type ScoreLine = { homeScore: number; awayScore: number };
 
@@ -67,20 +68,23 @@ export function DisputeResolver({
   };
 
   return (
-    <div
-      className={cn(
-        "space-y-6 rounded-xl border border-outline-variant bg-surface-container-low p-4",
-        pending && "pointer-events-none opacity-60"
-      )}
-      aria-busy={pending}
+    <ResolverCard
+      tone="critical"
+      kind="Dispute"
+      matchweekNumber={matchweekNumber}
+      busy={pending}
+      summary={
+        dispute.reason ? (
+          <>Reason: {dispute.reason}</>
+        ) : (
+          <>
+            <span className="text-on-surface">{disputerName}</span> disagrees with
+            the score <span className="text-on-surface">{submitterName}</span>{" "}
+            reported.
+          </>
+        )
+      }
     >
-      <div>
-        <p className="font-data text-sm text-error">DISPUTE</p>
-        {dispute.reason && (
-          <p className="mt-1 text-sm text-on-surface-variant">Reason: {dispute.reason}</p>
-        )}
-      </div>
-
       <MatchScoreStatus
         homeTeamName={homeName}
         awayTeamName={awayName}
@@ -94,7 +98,7 @@ export function DisputeResolver({
 
       {!counterScore && (
         <p className="text-sm text-on-surface-variant">
-          No counter score recorded for this dispute (legacy entry). Set the final result below.
+          No counter score recorded (legacy entry). Set the final result below.
         </p>
       )}
 
@@ -124,7 +128,9 @@ export function DisputeResolver({
           onClick={() => resolve("approved")}
         >
           <CheckCircle className="size-4" />
-          {pendingAction === "approved" ? "Approving…" : "Approve original submission"}
+          {pendingAction === "approved"
+            ? "Approving…"
+            : "Approve original submission"}
         </Button>
         <Button
           variant="destructive"
@@ -137,25 +143,12 @@ export function DisputeResolver({
         </Button>
       </div>
 
-      <section className="relative flex flex-col overflow-hidden rounded-xl border border-outline-variant bg-card p-4 shadow-lg">
-        <div className="absolute top-0 left-0 h-0.5 w-full bg-gradient-to-r from-transparent via-primary-container to-transparent opacity-50" />
-        <div className="mb-4 flex justify-between">
-          <div>
-            <h3 className="font-display text-lg font-semibold text-on-surface">
-              Finalize Result
-            </h3>
-            <p className="font-data text-xs text-outline">
-              Matchweek {matchweekNumber ?? "—"}
-            </p>
-          </div>
-          <span className="rounded border border-outline-variant bg-surface px-2 py-1 font-data text-xs text-primary-fixed">
-            VS
-          </span>
-        </div>
-
-        <p className="mb-4 text-sm text-on-surface-variant">
-          Set the official score if it differs from both submissions. This completes the
-          fixture and updates standings.
+      <div className="rounded-lg border border-outline-variant/60 bg-surface-container-lowest p-4">
+        <p className="font-data text-[11px] uppercase tracking-widest text-primary">
+          Override the result
+        </p>
+        <p className="mt-1 mb-4 text-sm text-on-surface-variant">
+          Set the official score if it differs from both submissions.
         </p>
 
         <div className="flex flex-col gap-4">
@@ -175,23 +168,25 @@ export function DisputeResolver({
           />
         </div>
 
+        <WarningNote tone="warn" className="mt-4">
+          Any of these actions completes the fixture and recalculates standings.
+        </WarningNote>
+
         {message.error && (
           <p className="mt-4 text-sm text-error">{message.error}</p>
         )}
 
-        <div className="mt-6 border-t border-outline-variant/30 pt-4">
-          <Button
-            variant="secondary"
-            className="w-full"
-            loading={pendingAction === "override"}
-            disabled={pending}
-            onClick={() => resolve("override")}
-          >
-            <Gavel className="size-4" />
-            {pendingAction === "override" ? "Finalizing…" : "Override & Finalize"}
-          </Button>
-        </div>
-      </section>
-    </div>
+        <Button
+          variant="secondary"
+          className="mt-4 w-full"
+          loading={pendingAction === "override"}
+          disabled={pending}
+          onClick={() => resolve("override")}
+        >
+          <Gavel className="size-4" />
+          {pendingAction === "override" ? "Finalising…" : "Override & finalise"}
+        </Button>
+      </div>
+    </ResolverCard>
   );
 }

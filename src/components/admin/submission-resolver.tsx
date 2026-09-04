@@ -6,7 +6,8 @@ import { adminApproveSubmission } from "@/actions/admin";
 import { EvidenceImagePreview } from "@/components/matches/evidence-image-preview";
 import { MatchScoreStatus } from "@/components/matches/match-score-status";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { WarningNote } from "@/components/ui/warning-note";
+import { ResolverCard } from "@/components/admin/resolver-card";
 import type { MatchSubmission } from "@/types/database";
 
 export function SubmissionResolver({
@@ -42,25 +43,19 @@ export function SubmissionResolver({
   };
 
   return (
-    <div
-      className={cn(
-        "space-y-6 rounded-xl border border-outline-variant bg-surface-container-low p-4",
-        pending && "pointer-events-none opacity-60"
-      )}
-      aria-busy={pending}
+    <ResolverCard
+      tone="pending"
+      kind="Pending report"
+      matchweekNumber={matchweekNumber}
+      busy={pending}
+      summary={
+        <>
+          <span className="text-on-surface">{submitterName}</span> submitted a
+          result; <span className="text-on-surface">{opponentName}</span> hasn
+          &apos;t approved it.
+        </>
+      }
     >
-      <div>
-        <p className="font-data text-sm text-primary">PENDING REPORT</p>
-        <p className="mt-1 text-sm text-on-surface-variant">
-          <span className="text-on-surface">{submitterName}</span> submitted a result;
-          awaiting approval from{" "}
-          <span className="text-on-surface">{opponentName}</span>
-        </p>
-        <p className="mt-1 font-data text-xs text-outline">
-          Matchweek {matchweekNumber ?? "—"}
-        </p>
-      </div>
-
       <MatchScoreStatus
         homeTeamName={homeName}
         awayTeamName={awayName}
@@ -80,6 +75,11 @@ export function SubmissionResolver({
         emptyMessage="Screenshot not available"
       />
 
+      <WarningNote tone="warn">
+        Approving finalises the fixture and recalculates standings. It can only
+        be undone with an admin revert within 24 hours.
+      </WarningNote>
+
       {message.error && <p className="text-sm text-error">{message.error}</p>}
 
       <Button
@@ -89,8 +89,8 @@ export function SubmissionResolver({
         onClick={handleApprove}
       >
         <CheckCircle className="size-4" />
-        {pending ? "Approving…" : "Approve & Finalize"}
+        {pending ? "Approving…" : "Approve & finalise"}
       </Button>
-    </div>
+    </ResolverCard>
   );
 }

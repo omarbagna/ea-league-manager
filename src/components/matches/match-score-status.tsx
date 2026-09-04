@@ -27,7 +27,7 @@ function ScoreColumn({
         highlight && "border-primary-container/40 ring-1 ring-primary-container/20"
       )}
     >
-      <span className="mb-1 font-data text-[10px] uppercase tracking-widest text-outline">
+      <span className="mb-1 font-data text-[11px] uppercase tracking-widest text-outline">
         {title}
       </span>
       {subtitle && (
@@ -43,12 +43,12 @@ function ScoreColumn({
           </div>
           <div className="flex w-full items-center justify-between gap-2 text-sm">
             <div className="flex flex-1 flex-col items-center text-center">
-              <span className="font-data text-[10px] uppercase text-outline">Home</span>
+              <span className="font-data text-[11px] uppercase text-outline">Home</span>
               <span className="font-display font-semibold">{homeTeamName}</span>
             </div>
             <div className="h-8 w-px shrink-0 bg-outline-variant/30" />
             <div className="flex flex-1 flex-col items-center text-center">
-              <span className="font-data text-[10px] uppercase text-outline">Away</span>
+              <span className="font-data text-[11px] uppercase text-outline">Away</span>
               <span className="font-display font-semibold">{awayTeamName}</span>
             </div>
           </div>
