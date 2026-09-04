@@ -166,6 +166,7 @@ export function FixturesClient({
                       fixture={fixture}
                       matchweek={matchweek}
                       linkToReport={fixture.status !== "completed" && mine}
+                      matchCentreHref={`/fixtures/${fixture.id}`}
                       highlightTeamId={highlightTeamId}
                       userProfileId={userProfileId}
                     />

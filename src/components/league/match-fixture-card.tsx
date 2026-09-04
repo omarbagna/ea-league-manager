@@ -78,6 +78,7 @@ export function MatchFixtureCard({
   fixture,
   matchweek,
   linkToReport,
+  matchCentreHref,
   highlightTeamId,
   userProfileId,
   footer,
@@ -85,6 +86,8 @@ export function MatchFixtureCard({
   fixture: FixtureWithTeams;
   matchweek?: MatchweekInfo;
   linkToReport?: boolean;
+  /** when set, non-report cards open the match centre for this fixture */
+  matchCentreHref?: string;
   highlightTeamId?: string;
   userProfileId?: string;
   footer?: ReactNode;
@@ -175,23 +178,44 @@ export function MatchFixtureCard({
 
   const cardBody = interactive ? (
     <Link href={`/matches/report?fixtureId=${fixture.id}`}>{content}</Link>
+  ) : matchCentreHref ? (
+    <Link href={matchCentreHref} className="block">
+      {content}
+    </Link>
   ) : (
     content
   );
 
-  if (footer || (interactive && showNoShowLink)) {
+  const extras = (
+    <>
+      {interactive && showNoShowLink && (
+        <Link
+          href={`/matches/report?fixtureId=${fixture.id}`}
+          className="text-center font-data text-xs uppercase tracking-widest text-error hover:underline"
+        >
+          Report opponent no-show
+        </Link>
+      )}
+      {interactive && matchCentreHref && (
+        <Link
+          href={matchCentreHref}
+          className="text-center font-data text-[11px] uppercase tracking-widest text-on-surface-variant hover:text-primary hover:underline"
+        >
+          Match centre
+        </Link>
+      )}
+    </>
+  );
+
+  if (
+    footer ||
+    (interactive && (showNoShowLink || matchCentreHref))
+  ) {
     return (
       <div className="flex flex-col gap-2">
         {cardBody}
         {footer}
-        {interactive && showNoShowLink && (
-          <Link
-            href={`/matches/report?fixtureId=${fixture.id}`}
-            className="text-center font-data text-xs uppercase tracking-widest text-error hover:underline"
-          >
-            Report opponent no-show
-          </Link>
-        )}
+        {extras}
       </div>
     );
   }
