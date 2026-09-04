@@ -53,7 +53,7 @@ function MovementCell({ delta }: { delta: number | undefined }) {
   );
 }
 
-function FormRun({ form }: { form: MatchResult[] | undefined }) {
+export function FormRun({ form }: { form: MatchResult[] | undefined }) {
   if (!form?.length) {
     return <span className="font-data text-xs text-outline">—</span>;
   }
@@ -87,6 +87,8 @@ export function StandingsTable({
   movement,
   formByTeam,
   showZones,
+  positionOffset = 0,
+  totalTeams,
 }: {
   standings: StandingRow[];
   highlightTeamId?: string;
@@ -94,8 +96,12 @@ export function StandingsTable({
   movement?: Map<string, number>;
   formByTeam?: Map<string, MatchResult[]>;
   showZones?: boolean;
+  /** rank of the first row - 1, when `standings` is a windowed slice */
+  positionOffset?: number;
+  /** full league size, when `standings` is a windowed slice */
+  totalTeams?: number;
 }) {
-  const total = standings.length;
+  const total = totalTeams ?? standings.length;
   const zonesOn = showZones ?? !compact;
   const withForm = !compact && !!formByTeam;
 
@@ -133,7 +139,7 @@ export function StandingsTable({
         </thead>
         <tbody>
           {standings.map((row, i) => {
-            const position = i + 1;
+            const position = positionOffset + i + 1;
             const highlighted = row.team_id === highlightTeamId;
             const zone = zonesOn ? zoneForPosition(position, total) : null;
             return (
@@ -231,7 +237,7 @@ export function StandingsTable({
           {(["champion", "promotion", "relegation"] as LeagueZone[])
             .filter((z) =>
               standings.some(
-                (_, i) => zoneForPosition(i + 1, total) === z
+                (_, i) => zoneForPosition(positionOffset + i + 1, total) === z
               )
             )
             .map((z) => (
@@ -252,12 +258,16 @@ export function StandingsTableCard({
   title = "League Standings",
   viewAllHref = "/standings",
   movement,
+  positionOffset = 0,
+  totalTeams,
 }: {
   standings: StandingRow[];
   highlightTeamId?: string;
   title?: string;
   viewAllHref?: string;
   movement?: Map<string, number>;
+  positionOffset?: number;
+  totalTeams?: number;
 }) {
   return (
     <section className="overflow-hidden rounded-xl border border-outline-variant bg-card glow-effect">
@@ -274,6 +284,9 @@ export function StandingsTableCard({
         standings={standings}
         highlightTeamId={highlightTeamId}
         movement={movement}
+        positionOffset={positionOffset}
+        totalTeams={totalTeams}
+        showZones={false}
         compact
       />
     </section>
