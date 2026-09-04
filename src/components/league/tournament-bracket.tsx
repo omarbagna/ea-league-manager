@@ -14,9 +14,11 @@ import { cn } from "@/lib/utils";
 function MatchRow({
   tournamentId,
   match,
+  canReport,
 }: {
   tournamentId: string;
   match: TournamentMatch;
+  canReport: boolean;
 }) {
   const [scoreA, setScoreA] = useState("");
   const [scoreB, setScoreB] = useState("");
@@ -85,9 +87,14 @@ function MatchRow({
             Final
           </StatusPill>
         )}
+        {match.status === "ready" && !canReport && (
+          <StatusPill tone="live" className="shrink-0">
+            Up next
+          </StatusPill>
+        )}
       </div>
 
-      {match.status === "ready" && (
+      {canReport && match.status === "ready" && (
         <div className="flex flex-wrap items-center gap-2 border-t border-outline-variant/50 pt-2.5">
           <Input
             value={scoreA}
@@ -126,10 +133,13 @@ function MatchRow({
   );
 }
 
-export function TournamentBracketAdmin({
+export function TournamentBracket({
   tournament,
+  canReport = false,
 }: {
   tournament: TournamentDetail;
+  /** admin view: shows an inline score-entry form on each reportable match */
+  canReport?: boolean;
 }) {
   return (
     <div className="space-y-6">
@@ -155,7 +165,12 @@ export function TournamentBracketAdmin({
           <CardContent className="pt-0">
             <ul className="space-y-2">
               {round.matches.map((m) => (
-                <MatchRow key={m.id} tournamentId={tournament.id} match={m} />
+                <MatchRow
+                  key={m.id}
+                  tournamentId={tournament.id}
+                  match={m}
+                  canReport={canReport}
+                />
               ))}
             </ul>
           </CardContent>

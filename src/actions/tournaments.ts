@@ -128,6 +128,50 @@ export async function addEntrantManually(
   return { success: "Entrant added." };
 }
 
+/** A player opts themself in — the self-serve counterpart to
+ *  addEntrantManually. The signup-window/capacity/status check itself
+ *  lives in the tournament_entrants_guard trigger, so this just needs
+ *  a friendly profile-completeness check and to surface a clear error
+ *  if the trigger rejects the insert. */
+export async function optIntoTournament(
+  tournamentId: string
+): Promise<TournamentActionState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, team_name, ea_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.team_name?.trim()) {
+    return {
+      error: "Finish setting your team name in Settings before opting in.",
+    };
+  }
+
+  const { error } = await supabase.from("tournament_entrants").insert({
+    tournament_id: tournamentId,
+    profile_id: user.id,
+    team_name: profile.team_name,
+    ea_id: profile.ea_id,
+  });
+
+  if (error) {
+    if (error.code === "23505") {
+      return { error: "You're already entered in this tournament." };
+    }
+    return { error: error.message };
+  }
+
+  revalidateTournamentPaths(tournamentId);
+  return { success: "You're in!" };
+}
+
 export async function removeEntrant(
   entrantId: string,
   tournamentId: string
@@ -144,6 +188,35 @@ export async function removeEntrant(
   if (error) return { error: error.message };
   revalidateTournamentPaths(tournamentId);
   return { success: "Entrant removed." };
+}
+
+/** Only while it's still in signups — once a bracket exists, deleting
+ *  it would orphan real results. */
+export async function deleteTournament(
+  tournamentId: string
+): Promise<TournamentActionState> {
+  const admin = await requireAdminUser();
+  if ("error" in admin) return { error: admin.error };
+
+  const supabase = await createClient();
+  const { data: tournament } = await supabase
+    .from("tournaments")
+    .select("status")
+    .eq("id", tournamentId)
+    .single();
+  if (!tournament) return { error: "Tournament not found." };
+  if (tournament.status !== "draft") {
+    return { error: "Only a tournament still in signups can be deleted." };
+  }
+
+  const { error } = await supabase
+    .from("tournaments")
+    .delete()
+    .eq("id", tournamentId);
+  if (error) return { error: error.message };
+
+  revalidateTournamentPaths();
+  return { success: "Tournament deleted." };
 }
 
 /** Bracket JSON shape the `generate_tournament_bracket` RPC expects. */

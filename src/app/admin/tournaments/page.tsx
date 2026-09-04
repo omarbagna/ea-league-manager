@@ -5,7 +5,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { TournamentsList } from "@/components/admin/tournaments-list";
+import { TournamentsList } from "@/components/league/tournaments-list";
 
 const BRACKET_SIZES = [2, 4, 8, 16, 32, 64];
 
@@ -88,7 +88,11 @@ export default async function AdminTournamentsPage() {
         <h2 className="mb-3 font-data text-xs uppercase tracking-wider text-on-surface-variant">
           All tournaments
         </h2>
-        <TournamentsList tournaments={tournaments} />
+        <TournamentsList
+          tournaments={tournaments}
+          hrefBase="/admin/tournaments"
+          emptyDescription="Create one above to run a knockout bracket alongside the league."
+        />
       </div>
     </div>
   );

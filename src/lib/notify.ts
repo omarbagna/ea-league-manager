@@ -5,8 +5,12 @@ import { sendPushToUser } from "@/lib/push";
 
 function deepLink(payload: Record<string, unknown>): string | undefined {
   const fixtureId = payload.fixtureId ?? payload.fixture_id;
-  return typeof fixtureId === "string"
-    ? `/matches/report?fixtureId=${fixtureId}`
+  if (typeof fixtureId === "string") {
+    return `/matches/report?fixtureId=${fixtureId}`;
+  }
+  const tournamentId = payload.tournamentId ?? payload.tournament_id;
+  return typeof tournamentId === "string"
+    ? `/tournaments/${tournamentId}`
     : undefined;
 }
 

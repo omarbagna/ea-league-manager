@@ -31,15 +31,22 @@ function fmt(d: string | null): string | null {
 
 export function TournamentsList({
   tournaments,
+  hrefBase = "/tournaments",
+  emptyTitle = "No tournaments yet",
+  emptyDescription = "Your league admin hasn't opened one up yet — check back soon.",
 }: {
   tournaments: TournamentSummary[];
+  /** where each row links — `/tournaments` for players, `/admin/tournaments` for admins */
+  hrefBase?: string;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }) {
   if (!tournaments.length) {
     return (
       <EmptyState
         icon={Swords}
-        title="No tournaments yet"
-        description="Create one above to run a knockout bracket alongside the league."
+        title={emptyTitle}
+        description={emptyDescription}
       />
     );
   }
@@ -55,7 +62,7 @@ export function TournamentsList({
               : null;
         return (
           <li key={t.id}>
-            <Link href={`/admin/tournaments/${t.id}`}>
+            <Link href={`${hrefBase}/${t.id}`}>
               <Card
                 variant="outline"
                 className="flex flex-col gap-2 p-4 transition-colors hover:border-primary-container/40 sm:flex-row sm:items-center sm:justify-between"
