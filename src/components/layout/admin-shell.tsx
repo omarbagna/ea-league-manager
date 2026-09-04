@@ -161,7 +161,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <AdminSignOutButton />
         </header>
 
-        <main className="relative z-0 min-h-0 flex-1 overflow-y-auto px-[var(--spacing-margin-mobile)] py-6 md:px-[var(--spacing-margin-desktop)]">
+        <main className="relative z-0 min-h-0 flex-1 overflow-y-auto px-[var(--spacing-margin-mobile)] py-6 md:px-6 lg:px-[var(--spacing-margin-desktop)]">
           {children}
         </main>
 
