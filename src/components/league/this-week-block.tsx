@@ -112,21 +112,15 @@ export function ThisWeekBlock({
       </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-outline-variant/60 px-5 py-4">
-        {forfeitEligible ? (
-          <>
-            <Link href={reportHref}>
-              <Button variant="secondary">Report no-show</Button>
-            </Link>
-            <Link
-              href={reportHref}
-              className="font-data text-xs text-primary-fixed hover:underline"
-            >
-              Played it? Report the score instead
-            </Link>
-          </>
-        ) : (
-          <Link href={reportHref}>
-            <Button>Report result</Button>
+        <Link href={reportHref}>
+          <Button>Report result</Button>
+        </Link>
+        {forfeitEligible && (
+          <Link
+            href={reportHref}
+            className="font-data text-xs uppercase tracking-widest text-error hover:underline"
+          >
+            Opponent no-show? Report it instead
           </Link>
         )}
         <Link
