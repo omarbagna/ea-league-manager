@@ -1,11 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { CalendarOff, ChevronsDown } from "lucide-react";
 import { MatchFixtureCard } from "@/components/league/match-fixture-card";
 import {
   MatchweekFixturesGroup,
+  resolveDefaultExpandedMatchweekId,
   useMatchweekExpansion,
 } from "@/components/league/matchweek-fixtures-group";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { FixtureWithTeams } from "@/types/database";
 
@@ -66,24 +69,34 @@ export function FixturesClient({
     defaultExpandedMatchweekId
   );
 
-  const currentMw = filtered[0]?.matchweek;
+  const currentMwId = resolveDefaultExpandedMatchweekId(
+    filtered,
+    defaultExpandedMatchweekId
+  );
+  const currentMw = filtered.find((g) => g.matchweek.id === currentMwId)?.matchweek;
+  const isFirstShown = filtered[0]?.matchweek.id === currentMwId;
+
   const highlightTeamId = scope === "league" ? (userTeamId ?? undefined) : undefined;
 
-  const emptyMessage =
-    scope === "mine" && !userTeamId
-      ? "You are not enrolled in the active season yet. Your league admin will add you when the season starts, or complete onboarding before the season begins."
-      : scope === "mine"
-        ? "No fixtures for your team match this filter."
-        : "No fixtures match this filter.";
+  const jumpToCurrent = useCallback(() => {
+    if (!currentMwId) return;
+    if (!expandedIds.has(currentMwId)) toggle(currentMwId);
+    document
+      .getElementById(`mw-anchor-${currentMwId}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [currentMwId, expandedIds, toggle]);
 
   return (
     <>
-      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+      <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <h2 className="font-display text-3xl font-extrabold uppercase italic tracking-tight text-secondary-fixed">
-            {currentMw ? `Matchweek ${currentMw.number}` : "Fixtures"}
+          <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
+            Fixtures
           </h2>
-          <p className="font-data mt-2 text-sm text-primary">{seasonName}</p>
+          <p className="mt-1 font-data text-sm text-on-surface-variant">
+            {seasonName}
+            {currentMw ? ` · Matchweek ${currentMw.number} in play` : ""}
+          </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Tabs value={scope} onValueChange={(v) => setScope(v as ScopeFilter)}>
@@ -104,30 +117,63 @@ export function FixturesClient({
         </div>
       </div>
 
+      {currentMw && !isFirstShown && (
+        <button
+          type="button"
+          onClick={jumpToCurrent}
+          className="mb-4 inline-flex items-center gap-1.5 rounded-lg border border-primary-container/40 bg-primary-container/[0.06] px-3 py-1.5 font-data text-xs text-primary-fixed transition-colors hover:bg-primary-container/10"
+        >
+          <ChevronsDown className="size-3.5" />
+          Jump to Matchweek {currentMw.number}
+        </button>
+      )}
+
       <div className="flex flex-col gap-4">
         {filtered.length === 0 ? (
-          <p className="text-center text-on-surface-variant">{emptyMessage}</p>
+          <EmptyState
+            icon={CalendarOff}
+            title={
+              scope === "mine" && !userTeamId
+                ? "You're not in this season yet"
+                : "No fixtures match this filter"
+            }
+            description={
+              scope === "mine" && !userTeamId
+                ? "Your league admin adds you when the season starts, or finish onboarding beforehand."
+                : "Try a different scope or status filter."
+            }
+          />
         ) : (
-          filtered.map(({ matchweek, fixtures }) => (
-            <MatchweekFixturesGroup
-              key={matchweek.id}
-              matchweek={matchweek}
-              fixtureCount={fixtures.length}
-              expanded={expandedIds.has(matchweek.id)}
-              onToggle={() => toggle(matchweek.id)}
-            >
-              {fixtures.map((fixture) => (
-                <MatchFixtureCard
-                  key={fixture.id}
-                  fixture={fixture}
-                  matchweek={matchweek}
-                  linkToReport={fixture.status !== "completed"}
-                  highlightTeamId={highlightTeamId}
-                  userProfileId={userProfileId}
-                />
-              ))}
-            </MatchweekFixturesGroup>
-          ))
+          filtered.map(({ matchweek, fixtures }) => {
+            const done = fixtures.filter((f) => f.status === "completed").length;
+            return (
+              <MatchweekFixturesGroup
+                key={matchweek.id}
+                matchweek={matchweek}
+                fixtureCount={fixtures.length}
+                expanded={expandedIds.has(matchweek.id)}
+                onToggle={() => toggle(matchweek.id)}
+                active={matchweek.id === currentMwId}
+                anchorId={`mw-anchor-${matchweek.id}`}
+                subLabel={`${done}/${fixtures.length} played`}
+              >
+                {fixtures.map((fixture) => {
+                  const mine =
+                    !!userTeamId && fixtureMatchesTeam(fixture, userTeamId);
+                  return (
+                    <MatchFixtureCard
+                      key={fixture.id}
+                      fixture={fixture}
+                      matchweek={matchweek}
+                      linkToReport={fixture.status !== "completed" && mine}
+                      highlightTeamId={highlightTeamId}
+                      userProfileId={userProfileId}
+                    />
+                  );
+                })}
+              </MatchweekFixturesGroup>
+            );
+          })
         )}
       </div>
     </>
