@@ -7,6 +7,7 @@ import { purgeSubmissionScreenshot } from "@/lib/purge-submission-screenshot";
 import { purgeForfeitScreenshot } from "@/lib/purge-forfeit-screenshot";
 import { enrollPlayerInSeason } from "@/lib/enroll-player-season";
 import { getActiveSeason } from "@/lib/season";
+import { notifyUser } from "@/lib/notify";
 import {
   buildMatchweekSchedule,
   getWeekendRange,
@@ -500,23 +501,6 @@ export async function adminRevertSubmission(
   revalidatePath("/standings");
   revalidatePath("/dashboard");
   return { success: "Result reverted. Players can re-submit." };
-}
-
-async function notifyUser(
-  userId: string,
-  type: string,
-  title: string,
-  body: string,
-  payload: Record<string, unknown> = {}
-) {
-  const service = await createServiceClient();
-  await service.from("notifications").insert({
-    user_id: userId,
-    type,
-    title,
-    body,
-    payload,
-  });
 }
 
 export async function approveForfeitReport(

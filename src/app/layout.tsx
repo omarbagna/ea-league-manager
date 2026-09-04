@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Anybody, Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
 
 const anybody = Anybody({
   variable: "--font-anybody",
@@ -23,10 +24,16 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Dark Elite League",
   description: "Competitive league management for Dark Elite League",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "Dark Elite", statusBarStyle: "black-translucent" },
   icons: {
     icon: "/logo.png",
     apple: "/logo.png",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0b0d11",
 };
 
 export default function RootLayout({
@@ -40,6 +47,7 @@ export default function RootLayout({
         className={`${anybody.variable} ${hanken.variable} ${jetbrains.variable} min-h-screen`}
       >
         {children}
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

@@ -118,7 +118,18 @@ NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# Web Push (optional — the app runs fine without it; push just stays off).
+# Generate a key pair once: npx web-push generate-vapid-keys
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
+VAPID_PRIVATE_KEY=your-vapid-private-key
+VAPID_SUBJECT=mailto:admin@your-domain.com
 ```
+
+> Notification preferences (migration `021`) work with no extra config.
+> Push notifications also need the three `VAPID_*` vars above and a
+> browser that supports the Push API. Without them the Settings page
+> shows "Push isn't configured for this league yet."
 
 ### Step 6 — Run the app locally
 
@@ -192,6 +203,10 @@ npx vercel env add NEXT_PUBLIC_SUPABASE_URL
 npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
 npx vercel env add SUPABASE_SERVICE_ROLE_KEY
 npx vercel env add NEXT_PUBLIC_SITE_URL
+# optional, for Web Push:
+npx vercel env add NEXT_PUBLIC_VAPID_PUBLIC_KEY
+npx vercel env add VAPID_PRIVATE_KEY
+npx vercel env add VAPID_SUBJECT
 npx vercel --prod
 ```
 
