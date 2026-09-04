@@ -232,6 +232,7 @@ export function AdminFixturesPanel({
                         fixture={fixture}
                         matchweek={matchweek}
                         linkToReport={false}
+                        matchCentreHref={`/fixtures/${fixture.id}`}
                         footer={
                           fixture.status !== "completed" ? (
                             <AdminFixtureForfeitDialog fixture={fixture} />

@@ -73,7 +73,10 @@ function FixtureRow({ f }: { f: TeamFixtureVM }) {
         <span className="truncate font-medium">{f.opponent.name}</span>
       </Link>
       {done ? (
-        <span className="flex items-center gap-2">
+        <Link
+          href={`/fixtures/${f.id}`}
+          className="flex items-center gap-2 transition-colors hover:text-primary"
+        >
           <span className="font-data tabular font-bold text-secondary-fixed">
             {f.teamScore}–{f.oppScore}
           </span>
@@ -81,11 +84,14 @@ function FixtureRow({ f }: { f: TeamFixtureVM }) {
             <span className="font-data text-[11px] uppercase text-warn">ff</span>
           )}
           <ResultLetter r={f.result} />
-        </span>
+        </Link>
       ) : (
-        <span className="font-data text-xs text-on-surface-variant">
+        <Link
+          href={`/fixtures/${f.id}`}
+          className="font-data text-xs text-on-surface-variant transition-colors hover:text-primary"
+        >
           {f.weekend ?? "TBD"}
-        </span>
+        </Link>
       )}
     </li>
   );
