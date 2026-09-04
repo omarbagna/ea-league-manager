@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Activity, Minus, MoveDown, MoveUp } from "lucide-react";
-import { getActiveSeason } from "@/lib/season";
+import { getDisplaySeason } from "@/lib/season";
 import { getPowerRankings } from "@/lib/queries/power-rankings";
 import type { EloRow } from "@/lib/queries/power-rankings";
 import { TeamCrest } from "@/components/league/team-crest";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { StatusPill } from "@/components/ui/status-pill";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -132,9 +133,9 @@ function EloRankRow({ row }: { row: EloRow }) {
 }
 
 export default async function PowerRankingsPage() {
-  const season = await getActiveSeason();
+  const display = await getDisplaySeason();
 
-  if (!season) {
+  if (!display) {
     return (
       <div className="mx-auto max-w-[1100px]">
         <h2 className="mb-2 font-display text-3xl font-bold tracking-tight text-primary">
@@ -148,6 +149,8 @@ export default async function PowerRankingsPage() {
       </div>
     );
   }
+
+  const { season, isArchived } = display;
 
   const data = await getPowerRankings(season.id);
   if (!data) {
@@ -169,18 +172,26 @@ export default async function PowerRankingsPage() {
   return (
     <div className="mx-auto max-w-[1100px] space-y-6">
       <div>
-        <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
-          Power Rankings
-        </h2>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
+            Power Rankings
+          </h2>
+          {isArchived && <StatusPill tone="neutral">Final</StatusPill>}
+        </div>
         <p className="mt-1 font-data text-sm text-on-surface-variant">
           {season.name}
-          {data.asOfMatchweek ? ` · as of Matchweek ${data.asOfMatchweek}` : ""}
+          {isArchived
+            ? " · season complete"
+            : data.asOfMatchweek
+              ? ` · as of Matchweek ${data.asOfMatchweek}`
+              : ""}
         </p>
         <p className="mt-2 max-w-2xl text-xs text-on-surface-variant">
           A simplified Elo-style rating built from this season&apos;s results —
           it rewards wins against strong opponents more than routine ones.
-          The predicted table below projects it forward. Both are a read on
-          current form, not a guarantee.
+          {isArchived
+            ? " This is where it finished."
+            : " The predicted table below projects it forward. Both are a read on current form, not a guarantee."}
         </p>
       </div>
 

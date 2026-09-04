@@ -205,6 +205,7 @@ export function AdminFixturesPanel({
               groups={filtered}
               teams={teams}
               revertableByFixtureId={revertableByFixtureId}
+              seasonStatus={seasonStatus}
             />
           ) : (
             <div className="flex flex-col gap-4">
@@ -234,14 +235,18 @@ export function AdminFixturesPanel({
                         linkToReport={false}
                         matchCentreHref={`/fixtures/${fixture.id}`}
                         footer={
-                          fixture.status !== "completed" ? (
-                            <AdminFixtureForfeitDialog fixture={fixture} />
-                          ) : revertable && !isForfeit ? (
-                            <AdminFixtureRevertDialog
-                              fixture={fixture}
-                              revertable={revertable}
-                            />
-                          ) : undefined
+                          seasonStatus !== "active"
+                            ? undefined
+                            : fixture.status !== "completed"
+                              ? <AdminFixtureForfeitDialog fixture={fixture} />
+                              : revertable && !isForfeit
+                                ? (
+                                  <AdminFixtureRevertDialog
+                                    fixture={fixture}
+                                    revertable={revertable}
+                                  />
+                                )
+                                : undefined
                         }
                       />
                     );
