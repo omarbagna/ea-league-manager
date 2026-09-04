@@ -66,7 +66,13 @@ export default async function StandingsPage() {
               : ""}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <Link
+            href="/power-rankings"
+            className="font-data text-xs text-primary-fixed hover:underline"
+          >
+            Power rankings →
+          </Link>
           <Link
             href="/leaderboards"
             className="font-data text-xs text-primary-fixed hover:underline"
