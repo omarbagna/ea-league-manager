@@ -1,8 +1,10 @@
+import { Gavel } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getFixtureById } from "@/lib/queries/fixtures";
 import { teamNameForProfile } from "@/lib/queries/disputes";
 import { getSubmissionScreenshotUrl } from "@/lib/queries/submission-screenshot";
 import { DisputeResolver } from "@/components/admin/dispute-resolver";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default async function AdminDisputesPage() {
   const supabase = await createClient();
@@ -68,13 +70,22 @@ export default async function AdminDisputesPage() {
   const items = enriched.filter((item): item is NonNullable<typeof item> => item != null);
 
   return (
-    <div className="space-y-8">
-      <h1 className="font-display text-2xl font-bold text-primary">Dispute Resolution</h1>
-      <p className="max-w-2xl text-sm text-on-surface-variant">
-        Compare both reported scores before approving, rejecting, or overriding the final result.
-      </p>
+    <div className="mx-auto max-w-[900px] space-y-6">
+      <div>
+        <h1 className="font-display text-3xl font-bold tracking-tight text-primary">
+          Disputes
+        </h1>
+        <p className="mt-1 text-on-surface-variant">
+          Compare both reported scores before approving, rejecting, or
+          overriding the final result.
+        </p>
+      </div>
       {items.length === 0 ? (
-        <p className="text-on-surface-variant">No open disputes.</p>
+        <EmptyState
+          icon={Gavel}
+          title="No open disputes"
+          description="When a player disagrees with a submitted score, it lands here for you to settle."
+        />
       ) : (
         <div className="space-y-6">
           {items.map((item) => (

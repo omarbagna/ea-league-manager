@@ -1,7 +1,74 @@
+import { Users } from "lucide-react";
 import { createServiceClient } from "@/lib/supabase/server";
 import { enrollPlayerInActiveSeasonForm } from "@/actions/admin";
 import { DisqualifyTeamDialog } from "@/components/admin/disqualify-team-dialog";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatusPill } from "@/components/ui/status-pill";
+
+function SectionCard({
+  title,
+  count,
+  hint,
+  children,
+}: {
+  title: string;
+  count?: number;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card variant="raised">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          {title}
+          {count !== undefined && (
+            <span className="font-data text-xs text-on-surface-variant">
+              {count}
+            </span>
+          )}
+        </CardTitle>
+        {hint && <p className="text-sm text-on-surface-variant">{hint}</p>}
+      </CardHeader>
+      <CardContent className="pt-0">{children}</CardContent>
+    </Card>
+  );
+}
+
+function MemberRow({
+  name,
+  eaId,
+  email,
+  pills,
+  action,
+}: {
+  name: string;
+  eaId?: string | null;
+  email?: string | null;
+  pills?: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <li className="flex flex-col gap-2 border-b border-outline-variant/50 py-3 first:pt-4 last:border-0 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-semibold text-on-surface">{name}</span>
+          {eaId && (
+            <span className="font-data text-xs text-primary-fixed">EA: {eaId}</span>
+          )}
+          {pills}
+        </div>
+        {email && (
+          <p className="mt-0.5 font-data text-xs text-on-surface-variant">
+            {email}
+          </p>
+        )}
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
+    </li>
+  );
+}
 
 export default async function AdminTeamsPage({
   searchParams,
@@ -44,7 +111,6 @@ export default async function AdminTeamsPage({
     .eq("is_banned", false)
     .order("created_at", { ascending: false });
 
-  /** Identity saved at onboarding (profile row) — not the same as a season `teams` row */
   const profileRegistrations = (memberProfiles ?? []).filter(
     (p) => Boolean(p.team_name?.trim()) || p.onboarding_complete
   );
@@ -71,221 +137,194 @@ export default async function AdminTeamsPage({
   const profileMap = new Map((enrolledProfiles ?? []).map((p) => [p.id, p]));
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto max-w-[860px] space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-bold text-primary">Registered Teams</h1>
-        <p className="mt-1 max-w-2xl text-sm text-on-surface-variant">
-          Onboarding saves a team name on a user&apos;s <strong>profile</strong> (players and
-          admins). Before the active season&apos;s start date, onboarding adds them to the season
-          automatically. After the season has started, use <strong>Awaiting enrollment</strong>{" "}
-          below to add them manually.
+        <h1 className="font-display text-3xl font-bold tracking-tight text-primary">
+          Teams
+        </h1>
+        <p className="mt-1 max-w-2xl text-on-surface-variant">
+          Onboarding saves a team name on a player&apos;s profile. Before the
+          season&apos;s start date they join automatically; after it starts, add
+          them from <strong>Awaiting enrollment</strong>.
         </p>
       </div>
 
       {params.error && (
-        <p className="rounded-lg border border-error bg-error-container/20 px-4 py-3 text-sm text-error">
+        <p className="rounded-lg border border-error/50 bg-error/10 px-4 py-3 text-sm text-error">
           {params.error}
         </p>
       )}
       {params.success && (
-        <p className="rounded-lg border border-primary-container/30 bg-primary-container/10 px-4 py-3 text-sm text-primary-fixed">
+        <p className="rounded-lg border border-secondary-fixed/40 bg-secondary-fixed/10 px-4 py-3 text-sm text-secondary-fixed">
           {params.success}
         </p>
       )}
 
-      <section className="space-y-3">
-        <h2 className="font-display text-lg font-semibold text-on-surface">
-          Registrations ({profileRegistrations.length})
-        </h2>
-        <p className="max-w-xl text-sm text-on-surface-variant">
-          Everyone who completed onboarding (or has a team name on their profile), including admins.
-          This list does not depend on the season being active.
-        </p>
+      <SectionCard
+        title="Registrations"
+        count={profileRegistrations.length}
+        hint="Everyone with a team name on their profile, admins included. Independent of the active season."
+      >
         {profileRegistrations.length === 0 ? (
-          <p className="rounded-xl border border-outline-variant bg-surface-container-low px-4 py-6 text-center text-sm text-on-surface-variant">
-            No registrations yet. Users must finish onboarding at{" "}
-            <span className="text-on-surface">/onboarding</span> after signing in.
-          </p>
+          <EmptyState
+            compact
+            icon={Users}
+            title="No registrations yet"
+            description="Users complete onboarding at /onboarding after signing in."
+          />
         ) : (
-          <ul className="space-y-2">
+          <ul>
             {profileRegistrations.map((p) => {
               const inActiveSeason = enrolledProfileIds.has(p.id);
               return (
-                <li
+                <MemberRow
                   key={p.id}
-                  className="flex flex-col gap-1 rounded-lg border border-outline-variant px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <span className="font-semibold text-on-surface">
-                      {p.team_name?.trim() || "(no team name)"}
-                    </span>
-                    {p.ea_id && (
-                      <span className="ml-2 font-data text-xs text-primary">EA: {p.ea_id}</span>
-                    )}
-                    <p className="text-sm text-on-surface-variant">
-                      {p.email}
-                      {p.role === "admin" && (
-                        <span className="ml-2 rounded bg-secondary-fixed/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-secondary-fixed">
-                          Admin
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  <span
-                    className={
-                      inActiveSeason
-                        ? "text-xs font-medium text-primary"
-                        : "text-xs text-on-surface-variant"
-                    }
-                  >
-                    {inActiveSeason
-                      ? season
-                        ? `Enrolled in ${season.name}`
-                        : "Enrolled in active season"
-                      : season
-                        ? "Not in active season yet"
-                        : "No active season — enroll after activation"}
-                  </span>
-                </li>
+                  name={p.team_name?.trim() || "(no team name)"}
+                  eaId={p.ea_id}
+                  email={p.email}
+                  pills={
+                    p.role === "admin" && (
+                      <StatusPill tone="info">Admin</StatusPill>
+                    )
+                  }
+                  action={
+                    <StatusPill tone={inActiveSeason ? "positive" : "neutral"}>
+                      {inActiveSeason
+                        ? season
+                          ? `In ${season.name}`
+                          : "Enrolled"
+                        : season
+                          ? "Not in season"
+                          : "Awaiting season"}
+                    </StatusPill>
+                  }
+                />
               );
             })}
           </ul>
         )}
-      </section>
+      </SectionCard>
 
       {!season ? (
-        <p className="rounded-lg border border-outline-variant/80 bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant">
-          Activate a season on the Seasons page. Then use <strong>Awaiting enrollment</strong> below
-          to add registered members into that season.
-        </p>
+        <Card variant="raised">
+          <CardContent>
+            <EmptyState
+              compact
+              icon={Users}
+              title="No active season"
+              description="Activate a season on the Seasons page, then enroll registered members into it here."
+            />
+          </CardContent>
+        </Card>
       ) : (
         <>
-          <section className="space-y-3">
-            <h2 className="font-display text-lg font-semibold text-on-surface">
-              Awaiting enrollment ({pendingEnrollment.length})
-            </h2>
-            <p className="max-w-xl text-sm text-on-surface-variant">
-              Registered members not yet in {season.name}. Use Add to season to create their team
-              for fixtures and standings.
-            </p>
-
+          <SectionCard
+            title="Awaiting enrollment"
+            count={pendingEnrollment.length}
+            hint={`Registered members not yet in ${season.name}. Add them to create their team for fixtures and standings.`}
+          >
             {pendingEnrollment.length === 0 ? (
-              <p className="rounded-xl border border-outline-variant bg-surface-container-low px-4 py-6 text-center text-sm text-on-surface-variant">
-                No one waiting. If someone registered before the season went live, check{" "}
-                <strong>Registrations</strong> above — they need a team name on their
-                profile. If onboarding failed earlier, ask them to complete onboarding again or set
-                their team name in Supabase.
-              </p>
+              <EmptyState
+                compact
+                icon={Users}
+                title="No one waiting"
+                description="Registered members who need a team appear here once they've set a team name."
+              />
             ) : (
-              <ul className="space-y-2">
+              <ul>
                 {pendingEnrollment.map((p) => (
-                  <li
+                  <MemberRow
                     key={p.id}
-                    className="flex flex-col gap-2 rounded-lg border border-primary-container/30 bg-primary-container/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <span className="font-semibold text-on-surface">{p.team_name}</span>
-                      {p.ea_id && (
-                        <span className="ml-2 font-data text-xs text-primary">
-                          EA: {p.ea_id}
-                        </span>
-                      )}
-                      <p className="text-sm text-on-surface-variant">
-                        {p.email}
-                        {p.role === "admin" && (
-                          <span className="ml-2 rounded bg-secondary-fixed/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-secondary-fixed">
-                            Admin
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    <form action={enrollPlayerInActiveSeasonForm}>
-                      <input type="hidden" name="profileId" value={p.id} />
-                      <SubmitButton type="submit" size="sm" pendingText="Adding…">
-                        Add to season
-                      </SubmitButton>
-                    </form>
-                  </li>
+                    name={p.team_name ?? "(no team name)"}
+                    eaId={p.ea_id}
+                    email={p.email}
+                    pills={
+                      p.role === "admin" && (
+                        <StatusPill tone="info">Admin</StatusPill>
+                      )
+                    }
+                    action={
+                      <form action={enrollPlayerInActiveSeasonForm}>
+                        <input type="hidden" name="profileId" value={p.id} />
+                        <SubmitButton
+                          type="submit"
+                          size="sm"
+                          pendingText="Adding…"
+                        >
+                          Add to season
+                        </SubmitButton>
+                      </form>
+                    }
+                  />
                 ))}
               </ul>
             )}
-          </section>
+          </SectionCard>
 
-          <section className="space-y-3">
-            <h2 className="font-display text-lg font-semibold text-on-surface">
-              Enrolled in {season.name} ({(teams ?? []).length})
-            </h2>
-            <p className="max-w-xl text-sm text-on-surface-variant">
-              Rows in the season teams table (used for fixtures). Pre-season onboarding alone does
-              not create these until you enroll.
-            </p>
-
+          <SectionCard
+            title={`Enrolled in ${season.name}`}
+            count={(teams ?? []).length}
+            hint="Rows in the season teams table — these drive fixtures and standings."
+          >
             {(teams ?? []).length === 0 ? (
-              <p className="rounded-xl border border-outline-variant bg-surface-container-low px-4 py-8 text-center text-on-surface-variant">
-                No season teams yet. Add members from Awaiting enrollment above.
-              </p>
+              <EmptyState
+                compact
+                icon={Users}
+                title="No season teams yet"
+                description="Add members from Awaiting enrollment above."
+              />
             ) : (
-              <ul className="space-y-2">
+              <ul>
                 {(teams ?? []).map((t) => {
-                  const profile = t.profile_id ? profileMap.get(t.profile_id) : null;
+                  const profile = t.profile_id
+                    ? profileMap.get(t.profile_id)
+                    : null;
                   const isDisqualified = Boolean(t.disqualified_at);
                   return (
-                    <li
+                    <MemberRow
                       key={t.id}
-                      className="flex flex-col gap-2 rounded-lg border border-outline-variant px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div>
-                        <span className="font-semibold text-on-surface">{t.name}</span>
-                        {isDisqualified && (
-                          <span className="ml-2 rounded bg-error-container/30 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-error">
-                            Disqualified
-                          </span>
-                        )}
-                        {profile?.ea_id && (
-                          <span className="ml-2 font-data text-xs text-primary">
-                            EA: {profile.ea_id}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-col items-start gap-2 sm:items-end">
-                        <span className="text-sm text-on-surface-variant">
-                          {profile?.email ?? "No manager linked"}
-                        </span>
-                        {!isDisqualified && (
+                      name={t.name}
+                      eaId={profile?.ea_id}
+                      email={profile?.email ?? "No manager linked"}
+                      pills={
+                        isDisqualified && (
+                          <StatusPill tone="critical">Disqualified</StatusPill>
+                        )
+                      }
+                      action={
+                        !isDisqualified && (
                           <DisqualifyTeamDialog
                             teamId={t.id}
                             teamName={t.name}
                             seasonName={season.name}
                             hasSchedule={hasSchedule}
                           />
-                        )}
-                      </div>
-                    </li>
+                        )
+                      }
+                    />
                   );
                 })}
               </ul>
             )}
-          </section>
+          </SectionCard>
         </>
       )}
 
       {incompleteOnboarding.length > 0 && (
-        <section className="space-y-2">
-          <h2 className="font-display text-sm font-semibold text-on-surface-variant">
-            Accounts without registration ({incompleteOnboarding.length})
-          </h2>
-          <p className="text-xs text-on-surface-variant">
-            Signed in but never finished onboarding (no team name saved).
-          </p>
-          <ul className="space-y-1 text-sm text-on-surface-variant">
-            {incompleteOnboarding.slice(0, 5).map((p) => (
+        <SectionCard
+          title="Accounts without registration"
+          count={incompleteOnboarding.length}
+          hint="Signed in but never finished onboarding — no team name saved."
+        >
+          <ul className="space-y-1 py-3 font-data text-xs text-on-surface-variant">
+            {incompleteOnboarding.slice(0, 8).map((p) => (
               <li key={p.id}>{p.email}</li>
             ))}
-            {incompleteOnboarding.length > 5 && (
-              <li>…and {incompleteOnboarding.length - 5} more</li>
+            {incompleteOnboarding.length > 8 && (
+              <li>…and {incompleteOnboarding.length - 8} more</li>
             )}
           </ul>
-        </section>
+        </SectionCard>
       )}
     </div>
   );
