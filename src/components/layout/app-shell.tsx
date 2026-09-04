@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -10,6 +11,8 @@ import {
   Plus,
   Settings,
   History,
+  MoreHorizontal,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -17,17 +20,32 @@ import { NotificationsBell } from "@/components/notifications/notifications-bell
 import { AppSignOutButton } from "@/components/auth/sign-out-button";
 import { AppLogo } from "@/components/brand/app-logo";
 
-const navItems = [
+const REPORT = { href: "/matches/report", label: "Report", icon: Gamepad2 };
+
+const primaryNav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/fixtures", label: "Fixtures", icon: Calendar },
   { href: "/standings", label: "Standings", icon: Trophy },
+  REPORT,
+];
+
+const secondaryNav = [
   { href: "/history", label: "History", icon: History },
-  { href: "/matches/report", label: "Submit Score", icon: Gamepad2 },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-// Mobile bottom bar stays at five; History lives in the sidebar and links.
-const bottomNavItems = navItems.filter((i) => i.href !== "/history");
+// Sidebar keeps everything; Report sits last, next to the CTA button.
+const sidebarNav = [
+  primaryNav[0],
+  primaryNav[1],
+  primaryNav[2],
+  ...secondaryNav,
+  REPORT,
+];
+
+function isActive(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function AppShell({
   children,
@@ -41,6 +59,22 @@ export function AppShell({
   isAdmin?: boolean;
 }) {
   const pathname = usePathname();
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [moreOpen]);
+
+  const moreActive = secondaryNav.some((i) => isActive(pathname, i.href));
 
   return (
     <div className="flex h-screen min-h-0 flex-col overflow-hidden bg-background md:flex-row">
@@ -52,8 +86,8 @@ export function AppShell({
           </p>
         </div>
         <ul className="flex flex-1 flex-col gap-1">
-          {navItems.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href || pathname.startsWith(`${href}/`);
+          {sidebarNav.map(({ href, label, icon: Icon }) => {
+            const active = isActive(pathname, href);
             return (
               <li key={href}>
                 <Link
@@ -99,7 +133,7 @@ export function AppShell({
         <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-outline-variant bg-surface-container-lowest px-[var(--spacing-gutter)] shadow-[0_4px_24px_rgba(0,0,0,0.45)]">
           <AppLogo href="/dashboard" size="sm" showTitle className="md:hidden" />
           <nav className="hidden gap-6 lg:flex lg:items-end lg:self-stretch">
-            {navItems.slice(0, 2).map(({ href, label }) => (
+            {primaryNav.slice(0, 2).map(({ href, label }) => (
               <Link
                 key={href}
                 href={href}
@@ -123,27 +157,105 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="relative z-0 min-h-0 flex-1 overflow-y-auto px-[var(--spacing-margin-mobile)] py-6 md:px-[var(--spacing-margin-desktop)]">
+        <main className="relative z-0 min-h-0 flex-1 overflow-y-auto px-[var(--spacing-margin-mobile)] py-6 md:px-6 lg:px-[var(--spacing-margin-desktop)]">
           {children}
         </main>
 
-        <nav className="fixed bottom-0 left-0 z-50 flex h-16 w-full items-center justify-around border-t border-outline-variant bg-surface px-1 pb-1 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] md:hidden">
-          {bottomNavItems.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href || pathname.startsWith(`${href}/`);
+        {/* Mobile "More" sheet */}
+        {moreOpen && (
+          <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true">
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/60"
+              aria-label="Close menu"
+              onClick={() => setMoreOpen(false)}
+            />
+            <div className="absolute bottom-0 left-0 w-full rounded-t-2xl border-t border-outline-variant bg-surface-container-low p-4 pb-8 shadow-[0_-8px_32px_rgba(0,0,0,0.6)]">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="font-display font-semibold text-primary">More</span>
+                <button
+                  type="button"
+                  aria-label="Close menu"
+                  onClick={() => setMoreOpen(false)}
+                  className="rounded-lg p-1.5 text-on-surface-variant hover:bg-surface-container-highest"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+              <ul className="flex flex-col gap-1">
+                {secondaryNav.map(({ href, label, icon: Icon }) => (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2.5",
+                        isActive(pathname, href)
+                          ? "bg-primary-container font-bold text-on-primary-container"
+                          : "text-on-surface hover:bg-surface-container-highest"
+                      )}
+                    >
+                      <Icon className="size-5" />
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+                {isAdmin && (
+                  <li>
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-on-surface hover:bg-surface-container-highest"
+                    >
+                      <Settings className="size-5" />
+                      Admin panel
+                    </Link>
+                  </li>
+                )}
+              </ul>
+              {userEmail && (
+                <p className="mt-3 truncate border-t border-outline-variant px-3 pt-3 text-xs text-on-surface-variant">
+                  {userEmail}
+                </p>
+              )}
+              <div className="mt-2 px-1">
+                <AppSignOutButton fullWidth />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <nav className="fixed bottom-0 left-0 z-40 flex h-16 w-full items-center justify-around border-t border-outline-variant bg-surface px-1 pb-1 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] md:hidden">
+          {primaryNav.map(({ href, label, icon: Icon }) => {
+            const active = isActive(pathname, href);
             return (
               <Link
                 key={href}
                 href={href}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 p-2 text-[10px]",
-                  active ? "border-t-2 border-primary text-primary" : "text-on-surface-variant"
+                  "flex min-w-0 flex-1 flex-col items-center gap-0.5 p-2 text-[11px]",
+                  active
+                    ? "border-t-2 border-primary text-primary"
+                    : "text-on-surface-variant"
                 )}
               >
-                <Icon className="size-6" />
-                {label.split(" ")[0]}
+                <Icon className="size-6 shrink-0" />
+                <span className="truncate">{label}</span>
               </Link>
             );
           })}
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            aria-label="More"
+            className={cn(
+              "flex min-w-0 flex-1 flex-col items-center gap-0.5 p-2 text-[11px]",
+              moreActive || moreOpen
+                ? "border-t-2 border-primary text-primary"
+                : "text-on-surface-variant"
+            )}
+          >
+            <MoreHorizontal className="size-6 shrink-0" />
+            <span>More</span>
+          </button>
         </nav>
         <div className="h-16 md:hidden" />
       </div>
