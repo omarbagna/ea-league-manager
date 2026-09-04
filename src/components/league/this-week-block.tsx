@@ -45,7 +45,12 @@ export function ThisWeekBlock({
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-outline-variant/60 bg-surface-container-low px-5 py-3">
         <span className="inline-flex items-center gap-1.5 font-data text-xs uppercase tracking-widest text-primary">
           <CalendarDays className="size-3.5" />
-          This week · Matchweek {matchweekNumber}
+          {/* "This week" framing only makes sense while the window's still
+              open — paired with the countdown's "Matchweek ended" once it
+              closes, it read as contradicting itself. */}
+          {matchweekEnded
+            ? `Matchweek ${matchweekNumber}`
+            : `This week · Matchweek ${matchweekNumber}`}
           {weekendRange ? ` · ${weekendRange}` : ""}
         </span>
         <MatchweekCountdown endsAt={endsAt} />
