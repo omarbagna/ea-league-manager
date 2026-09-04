@@ -106,8 +106,11 @@ export function MatchFixtureCard({
   const showNoShowLink =
     upcoming && isParticipant && isMatchweekEnded(mw?.ends_at);
   const isForfeit = completed && !!fixture.forfeited_team_id;
-  // Only linkify team names when the whole card isn't already a link.
-  const linkTeams = !interactive;
+  // Only linkify team names when the whole card isn't already a link —
+  // matchCentreHref wraps the card exactly like the report link does, and
+  // nesting an <a> (team profile) inside an <a> (match centre/report) is
+  // invalid HTML that breaks hydration, not just a style nit.
+  const linkTeams = !interactive && !matchCentreHref;
 
   const content = (
     <div
