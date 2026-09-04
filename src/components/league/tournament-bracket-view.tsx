@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Trophy } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import { Check, Trophy } from "lucide-react";
+import { reportKnockoutResult } from "@/actions/tournaments";
 import type { TournamentDetail, TournamentMatch } from "@/lib/queries/tournaments";
 import { TeamCrest } from "@/components/league/team-crest";
 import { CountUpScore } from "@/components/league/count-up-score";
@@ -18,6 +19,11 @@ import { cn } from "@/lib/utils";
  * container height. A round with N/2 matches in the *same* height
  * container centres item i at (2i+1)/N — exactly the midpoint of round
  * r's items 2i and 2i+1. No per-round pixel math, no JS layout pass.
+ *
+ * Every match card is pinned to the same fixed height regardless of state
+ * (bye, scored, or mid-edit with score inputs showing) so that math stays
+ * exact — an error message from a failed report is shown as an absolutely
+ * positioned overlay rather than growing the card, for the same reason.
  */
 const SLOT_PX = 108;
 const COLUMN_W = 208;
@@ -29,19 +35,24 @@ function EntrantRow({
   won,
   showScore,
   placeholder,
+  editable,
+  value,
+  onValueChange,
+  onEnter,
 }: {
   entrant: TournamentMatch["entrantA"];
   score: number | null;
   won: boolean;
   showScore: boolean;
   placeholder: string;
+  editable?: boolean;
+  value?: string;
+  onValueChange?: (value: string) => void;
+  onEnter?: () => void;
 }) {
-  const content = (
+  return (
     <div
       className={cn(
-        // fixed height regardless of content — a bye row and a scored row
-        // must render pixel-identical, or the space-around centring the
-        // connector math relies on drifts by a few px per bye
         "flex h-10 items-center gap-2 px-2.5",
         won && "bg-secondary-fixed/[0.08]"
       )}
@@ -66,26 +77,75 @@ function EntrantRow({
       ) : (
         <span className="flex-1 truncate text-sm text-outline">{placeholder}</span>
       )}
-      {showScore && score !== null && (
-        <span
-          className={cn(
-            "shrink-0 font-data tabular text-sm font-bold",
-            won ? "text-secondary-fixed" : "text-on-surface-variant"
-          )}
-        >
-          <CountUpScore value={score} />
-        </span>
+      {editable ? (
+        <input
+          type="text"
+          inputMode="numeric"
+          value={value}
+          onChange={(e) => onValueChange?.(e.target.value.replace(/[^0-9]/g, ""))}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onEnter?.();
+          }}
+          placeholder="0"
+          aria-label={`${entrant?.teamName ?? "Score"} score`}
+          className="h-6 w-9 shrink-0 rounded border border-outline-variant bg-surface-container-lowest text-center font-data text-xs text-on-surface focus:border-primary-container focus:outline-none"
+        />
+      ) : (
+        showScore &&
+        score !== null && (
+          <span
+            className={cn(
+              "shrink-0 font-data tabular text-sm font-bold",
+              won ? "text-secondary-fixed" : "text-on-surface-variant"
+            )}
+          >
+            <CountUpScore value={score} />
+          </span>
+        )
       )}
     </div>
   );
-
-  return content;
 }
 
-function MatchCard({ match, isFinal }: { match: TournamentMatch; isFinal: boolean }) {
+function MatchCard({
+  match,
+  isFinal,
+  canReport,
+  tournamentId,
+}: {
+  match: TournamentMatch;
+  isFinal: boolean;
+  canReport: boolean;
+  tournamentId: string;
+}) {
+  const [scoreA, setScoreA] = useState("");
+  const [scoreB, setScoreB] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
   const aWon = !!match.winnerEntrantId && match.winnerEntrantId === match.entrantA?.id;
   const bWon = !!match.winnerEntrantId && match.winnerEntrantId === match.entrantB?.id;
   const completed = match.status === "completed";
+  const editing = canReport && match.status === "ready";
+
+  const submit = () => {
+    if (scoreA === "" || scoreB === "") {
+      setError("Enter both scores.");
+      return;
+    }
+    const a = Number(scoreA);
+    const b = Number(scoreB);
+    if (a === b) {
+      setError("A knockout match can't end in a draw.");
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const result = await reportKnockoutResult(tournamentId, match.id, a, b);
+      if (result.error) setError(result.error);
+      else window.location.reload();
+    });
+  };
 
   return (
     <div
@@ -93,7 +153,9 @@ function MatchCard({ match, isFinal }: { match: TournamentMatch; isFinal: boolea
         "relative flex flex-col overflow-hidden rounded-lg border bg-card",
         isFinal && completed
           ? "border-primary-container/50 accent-glow"
-          : "border-outline-variant"
+          : editing
+            ? "border-secondary-fixed/40"
+            : "border-outline-variant"
       )}
       style={{ width: COLUMN_W }}
     >
@@ -103,6 +165,10 @@ function MatchCard({ match, isFinal }: { match: TournamentMatch; isFinal: boolea
         won={aWon}
         showScore={completed}
         placeholder={match.isBye ? "Bye" : "TBD"}
+        editable={editing}
+        value={scoreA}
+        onValueChange={setScoreA}
+        onEnter={submit}
       />
       <div className="h-px bg-outline-variant/60" />
       <EntrantRow
@@ -111,13 +177,34 @@ function MatchCard({ match, isFinal }: { match: TournamentMatch; isFinal: boolea
         won={bWon}
         showScore={completed}
         placeholder={match.isBye ? "Bye" : "TBD"}
+        editable={editing}
+        value={scoreB}
+        onValueChange={setScoreB}
+        onEnter={submit}
       />
-      {match.status === "ready" && (
+
+      {editing && (
+        <button
+          type="button"
+          onClick={submit}
+          disabled={pending}
+          aria-label="Report result"
+          className="absolute -right-1.5 -top-1.5 flex size-6 items-center justify-center rounded-full border border-secondary-fixed/50 bg-secondary-fixed/20 text-secondary-fixed transition-colors hover:bg-secondary-fixed/30 disabled:opacity-50"
+        >
+          <Check className="size-3.5" />
+        </button>
+      )}
+      {!canReport && match.status === "ready" && (
         <span className="absolute -right-1.5 -top-1.5">
           <StatusPill tone="live" pulse>
             Next
           </StatusPill>
         </span>
+      )}
+      {error && (
+        <div className="absolute left-0 top-full z-10 mt-1 w-full rounded-md border border-error/40 bg-surface-container-highest px-2 py-1 font-data text-[10px] text-error shadow-lg">
+          {error}
+        </div>
       )}
     </div>
   );
@@ -158,7 +245,13 @@ function ConnectorColumn({ pairCount }: { pairCount: number }) {
   );
 }
 
-function DesktopBracket({ tournament }: { tournament: TournamentDetail }) {
+function DesktopBracket({
+  tournament,
+  canReport,
+}: {
+  tournament: TournamentDetail;
+  canReport: boolean;
+}) {
   const { rounds } = tournament;
   const round1Count = rounds[0]?.matches.length ?? 0;
   const height = Math.max(round1Count, 1) * SLOT_PX;
@@ -192,6 +285,8 @@ function DesktopBracket({ tournament }: { tournament: TournamentDetail }) {
                     key={m.id}
                     match={m}
                     isFinal={ri === rounds.length - 1}
+                    canReport={canReport}
+                    tournamentId={tournament.id}
                   />
                 ))}
               </div>
@@ -203,7 +298,13 @@ function DesktopBracket({ tournament }: { tournament: TournamentDetail }) {
   );
 }
 
-function MobileBracket({ tournament }: { tournament: TournamentDetail }) {
+function MobileBracket({
+  tournament,
+  canReport,
+}: {
+  tournament: TournamentDetail;
+  canReport: boolean;
+}) {
   const { rounds } = tournament;
   const defaultRoundId = useMemo(() => {
     const inPlay = rounds.find((r) => r.matches.some((m) => m.status === "ready"));
@@ -230,7 +331,12 @@ function MobileBracket({ tournament }: { tournament: TournamentDetail }) {
       <div className="mt-4 flex flex-col gap-3">
         {active?.matches.map((m) => (
           <div key={m.id} className="w-full">
-            <MatchCard match={m} isFinal={active.roundNumber === rounds[rounds.length - 1].roundNumber} />
+            <MatchCard
+              match={m}
+              isFinal={active.roundNumber === rounds[rounds.length - 1].roundNumber}
+              canReport={canReport}
+              tournamentId={tournament.id}
+            />
           </div>
         ))}
       </div>
@@ -238,7 +344,14 @@ function MobileBracket({ tournament }: { tournament: TournamentDetail }) {
   );
 }
 
-export function TournamentBracketView({ tournament }: { tournament: TournamentDetail }) {
+export function TournamentBracketView({
+  tournament,
+  canReport = false,
+}: {
+  tournament: TournamentDetail;
+  /** admin view: match cards become editable while a result is reportable */
+  canReport?: boolean;
+}) {
   if (!tournament.rounds.length) return null;
 
   return (
@@ -257,8 +370,8 @@ export function TournamentBracketView({ tournament }: { tournament: TournamentDe
         </div>
       )}
 
-      <DesktopBracket tournament={tournament} />
-      <MobileBracket tournament={tournament} />
+      <DesktopBracket tournament={tournament} canReport={canReport} />
+      <MobileBracket tournament={tournament} canReport={canReport} />
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { getTournamentDetail } from "@/lib/queries/tournaments";
 import { StatusPill } from "@/components/ui/status-pill";
 import { TournamentEntrantsPanel } from "@/components/admin/tournament-entrants-panel";
 import { ForceDeleteTournamentDialog } from "@/components/admin/force-delete-tournament-dialog";
-import { TournamentBracket } from "@/components/league/tournament-bracket";
+import { TournamentBracketView } from "@/components/league/tournament-bracket-view";
 
 const STATUS_TONE = {
   draft: "info",
@@ -84,7 +84,7 @@ export default async function AdminTournamentDetailPage({
           eligibleProfiles={eligibleProfiles}
         />
       ) : (
-        <TournamentBracket tournament={tournament} canReport />
+        <TournamentBracketView tournament={tournament} canReport />
       )}
     </div>
   );

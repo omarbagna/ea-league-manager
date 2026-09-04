@@ -13,6 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { WarningNote } from "@/components/ui/warning-note";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { LockTournamentDialog } from "@/components/admin/lock-tournament-dialog";
 
 export function TournamentEntrantsPanel({
@@ -125,19 +132,22 @@ export function TournamentEntrantsPanel({
 
           {eligibleProfiles.length > 0 && (
             <div className="flex flex-col gap-2 border-t border-outline-variant/50 pt-4 sm:flex-row">
-              <select
-                value={selectedProfile}
-                onChange={(e) => setSelectedProfile(e.target.value)}
-                className="flex h-11 flex-1 rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] focus:border-primary-container focus:ring-1 focus:ring-primary-container focus:outline-none"
+              <Select
+                value={selectedProfile || undefined}
+                onValueChange={setSelectedProfile}
               >
-                <option value="">Add a registered player…</option>
-                {eligibleProfiles.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.teamName}
-                    {p.eaId ? ` (${p.eaId})` : ""}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-11 flex-1">
+                  <SelectValue placeholder="Add a registered player…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {eligibleProfiles.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.teamName}
+                      {p.eaId ? ` (${p.eaId})` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button
                 type="button"
                 variant="secondary"
