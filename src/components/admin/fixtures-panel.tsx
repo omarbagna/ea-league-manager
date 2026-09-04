@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { LayoutGrid, Rows3 } from "lucide-react";
 import { AdminFixtureForfeitDialog } from "@/components/admin/admin-fixture-forfeit-dialog";
@@ -72,6 +72,15 @@ export function AdminFixturesPanel({
   const [view, setView] = useState<"table" | "cards">("table");
   const hasSchedule = matchweeks.length > 0;
   const isGenerating = pendingAction === "generate";
+
+  // Table's rightmost action column sits off-screen on a phone until
+  // scrolled horizontally — default to Cards there. Runs once on mount
+  // (not a live resize listener) so a later manual pick always wins.
+  useEffect(() => {
+    if (window.matchMedia?.("(max-width: 767px)").matches) {
+      setView("cards");
+    }
+  }, []);
 
   const previewCount =
     teams.length >= 2 ? teams.length * (teams.length - 1) : 0;

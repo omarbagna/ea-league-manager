@@ -28,7 +28,7 @@ export function LoginForm({ errorParam }: { errorParam?: string }) {
       )}
 
       <p className="rounded-lg border border-outline-variant/50 bg-surface-container/30 px-3 py-2 text-sm text-on-surface-variant">
-        Accounts use a password. First time after this change? Use{" "}
+        Don&apos;t have a password yet? Use{" "}
         <Link href="/forgot-password" className="text-primary hover:underline">
           Forgot password
         </Link>{" "}
