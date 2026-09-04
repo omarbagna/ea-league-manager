@@ -2,8 +2,10 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { LayoutGrid, Rows3 } from "lucide-react";
 import { AdminFixtureForfeitDialog } from "@/components/admin/admin-fixture-forfeit-dialog";
 import { AdminFixtureRevertDialog } from "@/components/admin/admin-fixture-revert-dialog";
+import { AdminFixturesTable } from "@/components/admin/admin-fixtures-table";
 import { MatchFixtureCard } from "@/components/league/match-fixture-card";
 import {
   MatchweekFixturesGroup,
@@ -67,6 +69,7 @@ export function AdminFixturesPanel({
   const [, startTransition] = useTransition();
   const [scheduleStart, setScheduleStart] = useState(seasonStartsAt ?? "");
   const [status, setStatus] = useState<StatusFilter>("all");
+  const [view, setView] = useState<"table" | "cards">("table");
   const hasSchedule = matchweeks.length > 0;
   const isGenerating = pendingAction === "generate";
 
@@ -84,7 +87,6 @@ export function AdminFixturesPanel({
 
   const { expandedIds, toggle } = useMatchweekExpansion(filtered);
 
-  const currentMw = filtered[0]?.matchweek;
 
   const handleGenerate = () => {
     setPendingAction("generate");
@@ -95,7 +97,7 @@ export function AdminFixturesPanel({
   };
 
   return (
-    <div className="mx-auto max-w-[1024px] space-y-8">
+    <div className="mx-auto max-w-[1100px] space-y-8">
       {teams.length < 2 && (
         <p className="text-sm text-on-surface-variant">
           At least two teams must register before generating fixtures.
@@ -145,27 +147,67 @@ export function AdminFixturesPanel({
 
       {hasSchedule && (
         <>
-          <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
-              <h2 className="font-display text-3xl font-extrabold uppercase italic tracking-tight text-secondary-fixed">
-                {currentMw ? `Matchweek ${currentMw.number}` : "Fixtures"}
+              <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
+                Fixtures
               </h2>
-              <p className="font-data mt-2 text-sm text-primary">{seasonName}</p>
-              <p className="font-data mt-1 text-xs uppercase text-on-surface-variant">
-                {seasonStatus}
+              <p className="font-data mt-1 text-sm text-on-surface-variant">
+                {seasonName} · {seasonStatus}
               </p>
             </div>
-            <Tabs value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
-              <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-                <TabsTrigger value="completed">Completed</TabsTrigger>
-              </TabsList>
-              <TabsContent value={status} className="hidden" />
-            </Tabs>
+            <div className="flex flex-wrap items-center gap-3">
+              <Tabs value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
+                <TabsList>
+                  <TabsTrigger value="all">All</TabsTrigger>
+                  <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                  <TabsTrigger value="completed">Completed</TabsTrigger>
+                </TabsList>
+                <TabsContent value={status} className="hidden" />
+              </Tabs>
+              <div className="flex overflow-hidden rounded-lg border border-outline-variant">
+                <button
+                  type="button"
+                  onClick={() => setView("table")}
+                  aria-pressed={view === "table"}
+                  aria-label="Table view"
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-2 font-data text-xs transition-colors",
+                    view === "table"
+                      ? "bg-primary-container text-on-primary-container"
+                      : "text-on-surface-variant hover:bg-surface-container-high"
+                  )}
+                >
+                  <Rows3 className="size-4" />
+                  Table
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setView("cards")}
+                  aria-pressed={view === "cards"}
+                  aria-label="Card view"
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-2 font-data text-xs transition-colors",
+                    view === "cards"
+                      ? "bg-primary-container text-on-primary-container"
+                      : "text-on-surface-variant hover:bg-surface-container-high"
+                  )}
+                >
+                  <LayoutGrid className="size-4" />
+                  Cards
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-4">
+          {view === "table" ? (
+            <AdminFixturesTable
+              groups={filtered}
+              teams={teams}
+              revertableByFixtureId={revertableByFixtureId}
+            />
+          ) : (
+            <div className="flex flex-col gap-4">
             {filtered.length === 0 ? (
               <p className="text-center text-on-surface-variant">
                 No fixtures match this filter.
@@ -206,7 +248,8 @@ export function AdminFixturesPanel({
                 </MatchweekFixturesGroup>
               ))
             )}
-          </div>
+            </div>
+          )}
         </>
       )}
 
