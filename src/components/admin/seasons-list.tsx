@@ -2,12 +2,15 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { CalendarRange, ChevronDown } from "lucide-react";
 import type { Season } from "@/types/database";
 import type { FixtureWithTeams } from "@/types/database";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatusPill } from "@/components/ui/status-pill";
 import { SeasonEditForm } from "@/components/admin/season-edit-form";
 import { SeasonSchedule } from "@/components/admin/season-schedule";
+import { EndSeasonDialog } from "@/components/admin/end-season-dialog";
 import type { AdminActionState } from "@/actions/admin";
 import { cn } from "@/lib/utils";
 
@@ -25,8 +28,15 @@ type SeasonMeta = {
   teamCount: number;
   matchweekCount: number;
   fixtureCount: number;
+  reportedFixtureCount: number;
   grouped: MatchweekGroup[];
 };
+
+const STATUS_TONE = {
+  draft: "neutral",
+  active: "positive",
+  completed: "info",
+} as const;
 
 export function SeasonsList({
   seasons,
@@ -52,6 +62,16 @@ export function SeasonsList({
   const [, startTransition] = useTransition();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  if (seasons.length === 0) {
+    return (
+      <EmptyState
+        icon={CalendarRange}
+        title="No seasons yet"
+        description="Create your first season above, then generate a schedule to bring the league online."
+      />
+    );
+  }
+
   return (
     <ul className="space-y-2">
       {seasons.map((s) => {
@@ -59,6 +79,7 @@ export function SeasonsList({
           teamCount: 0,
           matchweekCount: 0,
           fixtureCount: 0,
+          reportedFixtureCount: 0,
           grouped: [],
         };
         const expanded = expandedId === s.id;
@@ -89,9 +110,14 @@ export function SeasonsList({
                   )}
                 />
                 <div>
-                  <span className="font-semibold">{s.name}</span>
-                  <span className="ml-2 font-data text-xs uppercase text-on-surface-variant">
-                    {s.status}
+                  <span className="inline-flex items-center gap-2">
+                    <span className="font-semibold">{s.name}</span>
+                    <StatusPill
+                      tone={STATUS_TONE[s.status]}
+                      pulse={s.status === "active"}
+                    >
+                      {s.status}
+                    </StatusPill>
                   </span>
                   <p className="font-data text-xs text-on-surface-variant">
                     {meta.fixtureCount} fixtures · {meta.matchweekCount} matchweeks
@@ -112,9 +138,26 @@ export function SeasonsList({
                 >
                   Fixtures
                 </Link>
+                {s.status === "completed" && (
+                  <Link
+                    href={`/history/${s.id}`}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Hall of Fame
+                  </Link>
+                )}
+                {s.status === "active" && (
+                  <EndSeasonDialog
+                    seasonName={s.name}
+                    seasonId={s.id}
+                    totalFixtures={meta.fixtureCount}
+                    reportedFixtures={meta.reportedFixtureCount}
+                  />
+                )}
                 {s.status !== "active" && (
                   <Button
                     size="sm"
+                    variant={s.status === "completed" ? "outline" : "default"}
                     loading={isActivating}
                     disabled={!!pendingAction}
                     onClick={() => {
@@ -125,7 +168,11 @@ export function SeasonsList({
                       });
                     }}
                   >
-                    {isActivating ? "Activating…" : "Set Active"}
+                    {isActivating
+                      ? "Activating…"
+                      : s.status === "completed"
+                        ? "Reopen"
+                        : "Set Active"}
                   </Button>
                 )}
               </div>

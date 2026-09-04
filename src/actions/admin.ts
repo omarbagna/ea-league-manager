@@ -106,6 +106,48 @@ export async function activateSeason(seasonId: string): Promise<AdminActionState
   return { success: "Season activated." };
 }
 
+export async function completeSeason(
+  seasonId: string
+): Promise<AdminActionState> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: season } = await supabase
+    .from("seasons")
+    .select("status, ends_at")
+    .eq("id", seasonId)
+    .single();
+
+  if (!season) return { error: "Season not found." };
+  if (season.status !== "active") {
+    return { error: "Only the active season can be ended." };
+  }
+
+  const { error } = await supabase
+    .from("seasons")
+    .update({
+      status: "completed",
+      ends_at: season.ends_at ?? new Date().toISOString().slice(0, 10),
+    })
+    .eq("id", seasonId)
+    .eq("status", "active");
+
+  if (error) return { error: error.message };
+
+  for (const path of [
+    "/admin",
+    "/admin/seasons",
+    "/admin/standings",
+    "/dashboard",
+    "/standings",
+    "/fixtures",
+    "/history",
+  ]) {
+    revalidatePath(path);
+  }
+  return { success: "Season ended. It now appears in the Hall of Fame." };
+}
+
 export async function createMatchweek(
   seasonId: string,
   number: number,
