@@ -33,6 +33,17 @@ export function SeasonProgressChart({
     ? Math.ceil(((leaderPoints as number) + 3) / 5) * 5
     : undefined;
 
+  // Recharts silently drops whichever tick labels it thinks would collide,
+  // which produces uneven, arbitrary-looking gaps (e.g. MW10 and MW12
+  // vanishing while their neighbours stay). Picking our own evenly-spaced
+  // subset — always including the first and last matchweek — keeps the
+  // axis readable and consistent regardless of season length.
+  const maxTicks = 8;
+  const tickStep = Math.max(1, Math.ceil(data.length / maxTicks));
+  const xTicks = data
+    .map((d) => d.matchweek)
+    .filter((_, i) => i % tickStep === 0 || i === data.length - 1);
+
   return (
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -48,6 +59,8 @@ export function SeasonProgressChart({
             dataKey="matchweek"
             tick={{ fill: "#6c7480", fontSize: 12 }}
             tickFormatter={(v) => `MW${v}`}
+            ticks={xTicks}
+            interval={0}
           />
           <YAxis
             tick={{ fill: "#6c7480", fontSize: 12 }}
