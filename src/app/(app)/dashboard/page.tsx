@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { StatusPill } from "@/components/ui/status-pill";
 import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
-import { getActiveSeason, getCurrentUserTeamId } from "@/lib/season";
+import { getDisplaySeason, getCurrentUserTeamId } from "@/lib/season";
 import {
   getStandings,
   getSeasonProgress,
@@ -12,10 +12,13 @@ import {
 } from "@/lib/standings";
 import { getNextFixture, getActiveMatchweekFixture } from "@/lib/queries/fixtures";
 import { getRecentForm, getTeamStats } from "@/lib/queries/stats";
+import { getSeasonArchive } from "@/lib/queries/season-archive";
+import { getSeasonLeaderboards } from "@/lib/queries/leaderboards";
 import { StandingsTableCard } from "@/components/league/standings-table";
 import { ThisWeekBlock } from "@/components/league/this-week-block";
 import { SeasonStatsStrip } from "@/components/league/season-stats-strip";
 import { SeasonProgressChart } from "@/components/league/season-progress-chart";
+import { SeasonCelebration } from "@/components/dashboard/season-celebration";
 import { formatWeekendRange } from "@/lib/format-weekend";
 import { isMatchweekEnded, isMatchweekActive } from "@/lib/forfeit-eligibility";
 import { getForfeitEligibility } from "@/lib/queries/forfeits";
@@ -26,9 +29,9 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const season = await getActiveSeason();
+  const display = await getDisplaySeason();
 
-  if (!season || !user) {
+  if (!display || !user) {
     return (
       <div className="mx-auto max-w-[1280px]">
         <h2 className="mb-2 font-display text-2xl font-bold tracking-tight text-primary md:text-3xl">
@@ -40,6 +43,35 @@ export default async function DashboardPage() {
           description="Your dashboard lights up as soon as your league admin activates a season."
         />
       </div>
+    );
+  }
+
+  const { season, isArchived } = display;
+
+  if (isArchived) {
+    const archive = await getSeasonArchive(season.id);
+    if (!archive || !archive.table.length) {
+      return (
+        <div className="mx-auto max-w-[1280px]">
+          <h2 className="mb-2 font-display text-2xl font-bold tracking-tight text-primary md:text-3xl">
+            Overview
+          </h2>
+          <EmptyState
+            icon={CalendarOff}
+            title="Season complete"
+            description={`${season.name} has finished, with no results recorded.`}
+          />
+        </div>
+      );
+    }
+    const leaderboards = await getSeasonLeaderboards(season.id);
+    return (
+      <SeasonCelebration
+        seasonId={season.id}
+        seasonName={season.name}
+        archive={archive}
+        leaderboards={leaderboards}
+      />
     );
   }
 
