@@ -82,6 +82,12 @@ export function LoginForm({ errorParam }: { errorParam?: string }) {
         </Link>
       </p>
 
+      <p className="text-center text-sm text-on-surface-variant">
+        <Link href="/league" className="text-primary hover:underline">
+          View standings without an account →
+        </Link>
+      </p>
+
       <div className="border-t border-outline-variant pt-4 text-center">
         <a
           href="mailto:support@darkeliteleague.com"
