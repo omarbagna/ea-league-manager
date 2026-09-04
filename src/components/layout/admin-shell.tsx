@@ -71,7 +71,7 @@ function AdminSidebarNav({
                 className={cn(
                   "flex items-center gap-2 rounded-lg px-3 py-2 transition-all",
                   active
-                    ? "bg-primary-container font-bold text-on-primary-container shadow-[inset_0_0_8px_rgba(0,240,255,0.15)]"
+                    ? "bg-primary-container font-bold text-on-primary-container shadow-[inset_0_0_8px_rgba(51,214,227,0.15)]"
                     : "text-on-surface-variant hover:bg-surface-container-highest"
                 )}
               >

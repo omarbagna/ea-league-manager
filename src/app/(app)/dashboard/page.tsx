@@ -100,7 +100,7 @@ export default async function DashboardPage() {
       </div>
 
       {nextFixture && myTeamEntity && opponent && (
-        <section className="relative flex flex-col items-center justify-between gap-6 overflow-hidden rounded-xl border border-outline-variant bg-[#0f1115] p-6 glow-effect md:flex-row md:p-10">
+        <section className="relative flex flex-col items-center justify-between gap-6 overflow-hidden rounded-xl border border-outline-variant bg-card p-6 glow-effect md:flex-row md:p-10">
           <div className="relative z-10 text-center md:text-left">
             <span className="mb-2 flex items-center justify-center gap-1 font-data text-xs uppercase tracking-widest text-primary-fixed md:justify-start">
               <Calendar className="size-4" />
@@ -140,7 +140,7 @@ export default async function DashboardPage() {
                 seed={myTeamEntity.crest_seed}
                 crestUrl={myTeamEntity.crest_url}
                 size="lg"
-                className="border-2 border-primary-container shadow-[0_0_15px_rgba(0,240,255,0.15)]"
+                className="border-2 border-primary-container shadow-[0_0_15px_rgba(51,214,227,0.15)]"
               />
               <span className="font-display text-sm font-semibold uppercase">
                 {myTeamEntity.name}
@@ -190,7 +190,7 @@ export default async function DashboardPage() {
               )}
             </div>
           </div>
-          <div className="flex-1 rounded-xl border border-outline-variant bg-[#0f1115] p-4 glow-effect">
+          <div className="flex-1 rounded-xl border border-outline-variant bg-card p-4 glow-effect">
             <h4 className="mb-4 font-display font-semibold text-on-surface">Team Stats</h4>
             <div className="space-y-4">
               <StatBar
@@ -216,7 +216,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <section className="overflow-hidden rounded-xl border border-outline-variant bg-[#0f1115] glow-effect">
+      <section className="overflow-hidden rounded-xl border border-outline-variant bg-card glow-effect">
         <div className="flex items-center justify-between border-b border-outline-variant bg-surface-container-low p-4">
           <h3 className="flex items-center gap-2 font-display text-lg font-semibold text-primary">
             <BarChart3 className="size-5" />
