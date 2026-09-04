@@ -7,7 +7,8 @@ import { getTournamentDetail } from "@/lib/queries/tournaments";
 import { StatusPill } from "@/components/ui/status-pill";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TeamCrest } from "@/components/league/team-crest";
-import { TournamentBracket } from "@/components/league/tournament-bracket";
+import { TournamentBracketView } from "@/components/league/tournament-bracket-view";
+import { TournamentBracketLiveRefresh } from "@/components/league/tournament-bracket-live-refresh";
 import { TournamentOptInButton } from "@/components/league/tournament-opt-in-button";
 
 const STATUS_TONE = {
@@ -140,7 +141,12 @@ export default async function TournamentDetailPage({
           </CardContent>
         </Card>
       ) : (
-        <TournamentBracket tournament={tournament} />
+        <>
+          {tournament.status === "active" && (
+            <TournamentBracketLiveRefresh tournamentId={tournament.id} />
+          )}
+          <TournamentBracketView tournament={tournament} />
+        </>
       )}
     </div>
   );

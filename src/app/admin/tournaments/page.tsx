@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { TournamentsList } from "@/components/league/tournaments-list";
-
-const BRACKET_SIZES = [2, 4, 8, 16, 32, 64];
+import { TournamentSizeSelect } from "@/components/admin/tournament-size-select";
 
 export default async function AdminTournamentsPage() {
   const tournaments = await getTournaments();
@@ -41,19 +40,7 @@ export default async function AdminTournamentsPage() {
           </div>
           <div>
             <Label htmlFor="teamCount">Bracket size</Label>
-            <select
-              id="teamCount"
-              name="teamCount"
-              required
-              defaultValue={8}
-              className="flex h-12 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2 text-sm text-on-surface shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] transition-colors focus:border-primary-container focus:ring-1 focus:ring-primary-container focus:outline-none"
-            >
-              {BRACKET_SIZES.map((n) => (
-                <option key={n} value={n}>
-                  {n} teams
-                </option>
-              ))}
-            </select>
+            <TournamentSizeSelect id="teamCount" name="teamCount" defaultValue={8} />
             <p className="mt-1 text-xs text-on-surface-variant">
               Always resolves to a single final. If fewer teams opt in, the
               bracket shrinks to fit them with byes rather than forcing this

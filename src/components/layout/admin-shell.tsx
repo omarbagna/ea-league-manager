@@ -49,6 +49,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
       { href: "/admin/teams", label: "Teams", icon: Users },
       { href: "/admin/fixtures", label: "Fixtures", icon: Calendar },
       { href: "/admin/standings", label: "Standings", icon: Trophy },
+      { href: "/admin/tournaments", label: "Tournaments", icon: Swords },
     ],
   },
   {
@@ -62,12 +63,6 @@ const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "People",
     items: [{ href: "/admin/users", label: "Users", icon: UserCog }],
-  },
-  {
-    label: "Tournaments",
-    items: [
-      { href: "/admin/tournaments", label: "Tournaments", icon: Swords },
-    ],
   },
 ];
 

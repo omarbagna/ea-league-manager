@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getTournamentDetail } from "@/lib/queries/tournaments";
 import { StatusPill } from "@/components/ui/status-pill";
 import { TournamentEntrantsPanel } from "@/components/admin/tournament-entrants-panel";
-import { TournamentBracket } from "@/components/league/tournament-bracket";
+import { ForceDeleteTournamentDialog } from "@/components/admin/force-delete-tournament-dialog";
+import { TournamentBracketView } from "@/components/league/tournament-bracket-view";
 
 const STATUS_TONE = {
   draft: "info",
@@ -55,13 +56,22 @@ export default async function AdminTournamentDetailPage({
         Tournaments
       </Link>
 
-      <div className="flex flex-wrap items-center gap-2.5">
-        <h1 className="font-display text-3xl font-bold tracking-tight text-primary">
-          {tournament.name}
-        </h1>
-        <StatusPill tone={STATUS_TONE[tournament.status]}>
-          {STATUS_LABEL[tournament.status]}
-        </StatusPill>
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <h1 className="font-display text-3xl font-bold tracking-tight text-primary">
+            {tournament.name}
+          </h1>
+          <StatusPill tone={STATUS_TONE[tournament.status]}>
+            {STATUS_LABEL[tournament.status]}
+          </StatusPill>
+        </div>
+        {tournament.status !== "draft" && (
+          <ForceDeleteTournamentDialog
+            tournamentId={tournament.id}
+            tournamentName={tournament.name}
+            status={tournament.status}
+          />
+        )}
       </div>
       <p className="text-sm text-on-surface-variant">
         {tournament.entrants.length} / {tournament.teamCount} teams entered
@@ -74,7 +84,7 @@ export default async function AdminTournamentDetailPage({
           eligibleProfiles={eligibleProfiles}
         />
       ) : (
-        <TournamentBracket tournament={tournament} canReport />
+        <TournamentBracketView tournament={tournament} canReport />
       )}
     </div>
   );

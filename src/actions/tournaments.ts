@@ -219,6 +219,34 @@ export async function deleteTournament(
   return { success: "Tournament deleted." };
 }
 
+/** Deletes a tournament regardless of status — locked, active or
+ *  completed, entrants/rounds/matches and all. Unlike deleteTournament
+ *  this destroys real results, so it's a separate, more deliberately
+ *  confirmed action rather than a relaxed status check on the same one. */
+export async function forceDeleteTournament(
+  tournamentId: string
+): Promise<TournamentActionState> {
+  const admin = await requireAdminUser();
+  if ("error" in admin) return { error: admin.error };
+
+  const supabase = await createClient();
+  const { data: tournament } = await supabase
+    .from("tournaments")
+    .select("id")
+    .eq("id", tournamentId)
+    .maybeSingle();
+  if (!tournament) return { error: "Tournament not found." };
+
+  const { error } = await supabase
+    .from("tournaments")
+    .delete()
+    .eq("id", tournamentId);
+  if (error) return { error: error.message };
+
+  revalidateTournamentPaths();
+  return { success: "Tournament deleted." };
+}
+
 /** Bracket JSON shape the `generate_tournament_bracket` RPC expects. */
 function bracketToRpcPayload(bracket: Bracket) {
   return bracket.rounds.map((round) => ({
