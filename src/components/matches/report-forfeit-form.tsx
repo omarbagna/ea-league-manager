@@ -5,6 +5,7 @@ import { AlertTriangle, Send } from "lucide-react";
 import { submitForfeitReport } from "@/actions/matches";
 import { ScreenshotUpload } from "@/components/matches/screenshot-upload";
 import { Button } from "@/components/ui/button";
+import { WarningNote } from "@/components/ui/warning-note";
 import { cn } from "@/lib/utils";
 import type { FixtureWithTeams } from "@/types/database";
 
@@ -88,6 +89,11 @@ export function ReportForfeitForm({
         onUploadError={(msg) => setMessage({ error: msg })}
         onCleared={() => setScreenshotPath(null)}
       />
+
+      <WarningNote tone="warn" className="mt-4">
+        Only report a no-show if you were genuinely available to play. False
+        reports are penalised the same as a falsified score.
+      </WarningNote>
 
       {message.error && <p className="mt-2 text-sm text-error">{message.error}</p>}
       {message.success && (
